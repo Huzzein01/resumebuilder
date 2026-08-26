@@ -98,7 +98,7 @@ export const VolunteerWorkSchema = new Schema(
 const ProfileSchema = new Schema(
   {
     slug: { type: String, required: true, unique: true },
-    contact: { type: ContactInfoSchema, default: () => ({}) },
+    contact: { type: ContactInfoSchema, required: true, default: () => ({}) },
     summary: { type: String, default: "" },
     workExperience: { type: [WorkExperienceSchema], default: [] },
     projects: { type: [ProjectEntrySchema], default: [] },

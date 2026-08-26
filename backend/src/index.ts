@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import cors from "cors";
 import { connectDb } from "./db.js";
 import profileRoutes from "./routes/profileRoutes.js";
@@ -22,6 +22,24 @@ app.use("/api/resume-versions", coverLetterRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+// Must be registered after all routes -- catches errors forwarded via
+// next(err), including rejected promises passed through by asyncHandler.
+// Without this, an unhandled rejection in any async route (a malformed
+// Mongo id, a validation failure, a Puppeteer export error, etc.) would
+// otherwise crash the whole process, taking every other request down with it.
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Request failed:", err);
+
+  const name = err instanceof Error ? err.name : undefined;
+  if (name === "CastError" || name === "ValidationError") {
+    res.status(400).json({ error: "Invalid request." });
+    return;
+  }
+
+  const message = err instanceof Error ? err.message : "Internal server error";
+  res.status(500).json({ error: message });
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;

@@ -11,7 +11,7 @@ import {
 
 const ProfileSnapshotSchema = new Schema(
   {
-    contact: { type: ContactInfoSchema, default: () => ({}) },
+    contact: { type: ContactInfoSchema, required: true, default: () => ({}) },
     summary: { type: String, default: "" },
     workExperience: { type: [WorkExperienceSchema], default: [] },
     projects: { type: [ProjectEntrySchema], default: [] },
