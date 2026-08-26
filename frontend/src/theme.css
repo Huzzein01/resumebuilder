@@ -1,0 +1,87 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* Surfaces */
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface-2: #faf9f5;
+
+  /* Text */
+  --ink: #191e1d;
+  --muted: #5c6664;
+  --faint: #8a9391;
+
+  /* Structure */
+  --line: #dde3e1;
+  --shadow: 0 1px 2px rgba(25, 30, 29, 0.04), 0 6px 20px rgba(25, 30, 29, 0.06);
+
+  /* Primary: deep teal */
+  --primary: #0e6e5d;
+  --primary-ink: #ffffff;
+  --primary-soft: #e3f1ec;
+  --primary-soft-line: #bcded2;
+
+  /* Accent: warm amber */
+  --accent: #d97706;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbeedd;
+  --accent-soft-line: #eccda0;
+
+  /* Radii */
+  --radius-card: 14px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181a;
+    --surface: #1b2124;
+    --surface-2: #202729;
+
+    --ink: #edefec;
+    --muted: #97a19e;
+    --faint: #66706d;
+
+    --line: #2b3235;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 24px rgba(0, 0, 0, 0.35);
+
+    --primary: #3fc4a2;
+    --primary-ink: #0d211b;
+    --primary-soft: #16302a;
+    --primary-soft-line: #234a3e;
+
+    --accent: #e3a24b;
+    --accent-ink: #2a1a06;
+    --accent-soft: #3a2a16;
+    --accent-soft-line: #5a4322;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #14181a;
+  --surface: #1b2124;
+  --surface-2: #202729;
+
+  --ink: #edefec;
+  --muted: #97a19e;
+  --faint: #66706d;
+
+  --line: #2b3235;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 24px rgba(0, 0, 0, 0.35);
+
+  --primary: #3fc4a2;
+  --primary-ink: #0d211b;
+  --primary-soft: #16302a;
+  --primary-soft-line: #234a3e;
+
+  --accent: #e3a24b;
+  --accent-ink: #2a1a06;
+  --accent-soft: #3a2a16;
+  --accent-soft-line: #5a4322;
+}

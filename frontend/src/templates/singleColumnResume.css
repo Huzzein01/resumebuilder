@@ -1,0 +1,79 @@
+.resume-doc {
+  background: #ffffff;
+  color: #000000;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px;
+  line-height: 1.45;
+}
+
+.resume-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.resume-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.resume-contact-line {
+  font-size: 0.85rem;
+  margin: 2px 0;
+}
+
+.resume-section {
+  margin-bottom: 16px;
+}
+
+.resume-section-title {
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #000000;
+  padding-bottom: 3px;
+  margin-bottom: 8px;
+}
+
+.resume-skills-line {
+  font-size: 0.9rem;
+}
+
+.resume-entry {
+  margin-bottom: 10px;
+}
+
+.resume-entry-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.95rem;
+}
+
+.resume-entry-title {
+  font-weight: bold;
+}
+
+.resume-entry-dates {
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.resume-tech-stack {
+  font-style: italic;
+  font-size: 0.85rem;
+  margin: 2px 0 4px;
+}
+
+.resume-bullet-list {
+  margin: 4px 0 0;
+  padding-left: 20px;
+}
+
+.resume-bullet {
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
