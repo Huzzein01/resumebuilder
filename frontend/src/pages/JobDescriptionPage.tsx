@@ -20,6 +20,7 @@ import CoverageBar from "../components/CoverageBar.js";
 import SingleColumnResume from "../templates/SingleColumnResume.js";
 import CoverLetterDoc from "../templates/CoverLetterDoc.js";
 import { buildSelectedProfile } from "../utils/buildSelectedProfile.js";
+import { API_BASE_URL } from "../api/config.js";
 
 type Status = "idle" | "analyzing" | "error";
 type ScoreStatus = "idle" | "scoring" | "error";
@@ -103,7 +104,7 @@ export default function JobDescriptionPage() {
     setExportStatus(`exporting-${format}`);
     try {
       const version = await createResumeVersion(result.id, selection);
-      window.open(`/api/resume-versions/${version.id}/${format}`, "_blank");
+      window.open(`${API_BASE_URL}/resume-versions/${version.id}/${format}`, "_blank");
       setExportStatus("idle");
     } catch {
       setExportStatus("error");
@@ -120,7 +121,7 @@ export default function JobDescriptionPage() {
       if (hiringManagerName.trim()) params.set("hiringManagerName", hiringManagerName.trim());
       const query = params.toString();
       window.open(
-        `/api/resume-versions/${version.id}/cover-letter/${format}${query ? `?${query}` : ""}`,
+        `${API_BASE_URL}/resume-versions/${version.id}/cover-letter/${format}${query ? `?${query}` : ""}`,
         "_blank"
       );
       setCoverLetterExportStatus("idle");

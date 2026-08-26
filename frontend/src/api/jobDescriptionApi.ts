@@ -1,7 +1,8 @@
 import type { JobDescription } from "@resumebuilder/shared";
+import { API_BASE_URL } from "./config.js";
 
 export async function submitJobDescription(rawText: string): Promise<JobDescription> {
-  const res = await fetch("/api/job-descriptions", {
+  const res = await fetch(`${API_BASE_URL}/job-descriptions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ rawText }),
@@ -11,7 +12,7 @@ export async function submitJobDescription(rawText: string): Promise<JobDescript
 }
 
 export async function fetchJobDescriptions(): Promise<JobDescription[]> {
-  const res = await fetch("/api/job-descriptions");
+  const res = await fetch(`${API_BASE_URL}/job-descriptions`);
   if (!res.ok) throw new Error(`Failed to fetch job descriptions: ${res.status}`);
   return res.json();
 }

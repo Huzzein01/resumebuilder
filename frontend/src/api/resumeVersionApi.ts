@@ -1,10 +1,11 @@
 import type { ResumeVersion, SelectionState, CoverLetterContent } from "@resumebuilder/shared";
+import { API_BASE_URL } from "./config.js";
 
 export async function createResumeVersion(
   jobDescriptionId: string,
   selection: SelectionState
 ): Promise<ResumeVersion> {
-  const res = await fetch("/api/resume-versions", {
+  const res = await fetch(`${API_BASE_URL}/resume-versions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ jobDescriptionId, selection }),
@@ -14,7 +15,7 @@ export async function createResumeVersion(
 }
 
 export async function fetchResumeVersion(id: string): Promise<ResumeVersion> {
-  const res = await fetch(`/api/resume-versions/${id}`);
+  const res = await fetch(`${API_BASE_URL}/resume-versions/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch resume version: ${res.status}`);
   return res.json();
 }
@@ -33,7 +34,7 @@ function coverLetterQuery(options: CoverLetterOptions): string {
 }
 
 export async function fetchCoverLetter(id: string, options: CoverLetterOptions = {}): Promise<CoverLetterContent> {
-  const res = await fetch(`/api/resume-versions/${id}/cover-letter${coverLetterQuery(options)}`);
+  const res = await fetch(`${API_BASE_URL}/resume-versions/${id}/cover-letter${coverLetterQuery(options)}`);
   if (!res.ok) throw new Error(`Failed to fetch cover letter: ${res.status}`);
   return res.json();
 }
