@@ -487,6 +487,15 @@ section.form-section h3 {
   color: var(--primary);
 }
 
+/* Distinct from primary/must-have pills on purpose -- this marks content an
+   LLM produced, so it should never look identical to deterministic output. */
+.pill-ai {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-soft-line);
+  font-weight: 700;
+}
+
 .pill-missing {
   background: var(--accent-soft);
   color: var(--accent);

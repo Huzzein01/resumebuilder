@@ -80,6 +80,14 @@ export interface Profile {
 
 export type ProfileDraft = Omit<Profile, "id">;
 
+export interface ProfileImportResult {
+  draft: ProfileDraft;
+  /** Which path actually produced this draft -- the frontend uses this to label AI-produced results distinctly rather than presenting them identically to the deterministic parser's output. */
+  method: "llm" | "deterministic";
+  /** Set only when method is "llm". */
+  provider?: string;
+}
+
 export interface MatchedSkill {
   skillId: string;
   name: string;

@@ -1,4 +1,4 @@
-import type { Profile, ProfileDraft } from "@resumebuilder/shared";
+import type { Profile, ProfileImportResult } from "@resumebuilder/shared";
 import { API_BASE_URL } from "./config.js";
 
 export async function fetchProfile(): Promise<Profile> {
@@ -17,7 +17,7 @@ export async function saveProfile(profile: Profile): Promise<Profile> {
   return res.json();
 }
 
-export async function importProfile(file: File): Promise<ProfileDraft> {
+export async function importProfile(file: File): Promise<ProfileImportResult> {
   const formData = new FormData();
   formData.append("resume", file);
   const res = await fetch(`${API_BASE_URL}/profile/import`, { method: "POST", body: formData });

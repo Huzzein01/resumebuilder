@@ -55,6 +55,7 @@ export default function ProfileEditor() {
   const [status, setStatus] = useState<Status>("loading");
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importError, setImportError] = useState<string | null>(null);
+  const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -83,8 +84,9 @@ export default function ProfileEditor() {
     setImportStatus("importing");
     setImportError(null);
     try {
-      const draft = await importProfile(file);
+      const { draft, method } = await importProfile(file);
       setProfile({ ...profile, ...draft });
+      setImportMethod(method);
       setImportStatus("imported");
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Failed to import resume.");
@@ -153,7 +155,14 @@ export default function ProfileEditor() {
         />
         {importStatus === "importing" && <p className="status">Parsing…</p>}
         {importStatus === "imported" && (
-          <p className="status">Parsed — review and correct the fields below before saving.</p>
+          <p className="status">
+            {importMethod === "llm" ? (
+              <span className="pill pill-ai">AI-parsed</span>
+            ) : (
+              <span className="pill pill-nice">Rule-based parse</span>
+            )}{" "}
+            — review and correct the fields below before saving.
+          </p>
         )}
         {importStatus === "error" && <p className="status">{importError}</p>}
       </section>
