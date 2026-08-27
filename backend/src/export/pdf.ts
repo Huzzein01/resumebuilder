@@ -8,7 +8,10 @@ export async function renderResumeVersionToPdf(resumeVersionId: string): Promise
   try {
     const page = await browser.newPage();
     await page.goto(printUrl, { waitUntil: "networkidle0" });
-    await page.waitForSelector(".resume-doc");
+    // Every resume template's root element carries this marker class
+    // regardless of its own template-specific class, so PDF export doesn't
+    // need to know which template was chosen.
+    await page.waitForSelector(".resume-print-root");
     const pdfUint8Array = await page.pdf({ format: "Letter", printBackground: true });
     return Buffer.from(pdfUint8Array);
   } finally {

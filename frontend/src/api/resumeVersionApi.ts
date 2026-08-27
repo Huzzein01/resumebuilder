@@ -1,14 +1,15 @@
-import type { ResumeVersion, SelectionState, CoverLetterContent } from "@resumebuilder/shared";
+import type { ResumeVersion, SelectionState, CoverLetterContent, ResumeTemplateId } from "@resumebuilder/shared";
 import { API_BASE_URL } from "./config.js";
 
 export async function createResumeVersion(
   jobDescriptionId: string,
-  selection: SelectionState
+  selection: SelectionState,
+  templateName?: ResumeTemplateId
 ): Promise<ResumeVersion> {
   const res = await fetch(`${API_BASE_URL}/resume-versions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jobDescriptionId, selection }),
+    body: JSON.stringify({ jobDescriptionId, selection, templateName }),
   });
   if (!res.ok) throw new Error(`Failed to create resume version: ${res.status}`);
   return res.json();

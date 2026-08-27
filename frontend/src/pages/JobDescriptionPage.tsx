@@ -3,12 +3,15 @@ import {
   scoreProfile,
   buildTailoredResume,
   buildCoverLetter,
+  RESUME_TEMPLATES,
+  DEFAULT_RESUME_TEMPLATE_ID,
   type JobDescription,
   type RelevanceResult,
   type Profile,
   type SelectionState,
   type ItemSelection,
   type CoverLetterContent,
+  type ResumeTemplateId,
 } from "@resumebuilder/shared";
 import { submitJobDescription, fetchJobDescriptions } from "../api/jobDescriptionApi.js";
 import { fetchRelevance } from "../api/relevanceApi.js";
@@ -18,7 +21,7 @@ import { createResumeVersion, fetchCoverLetter } from "../api/resumeVersionApi.j
 import DraggableChecklist, { type ChecklistItem } from "../components/DraggableChecklist.js";
 import ScoreGauge from "../components/ScoreGauge.js";
 import CoverageBar from "../components/CoverageBar.js";
-import SingleColumnResume from "../templates/SingleColumnResume.js";
+import { resolveTemplateComponent } from "../templates/registry.js";
 import CoverLetterDoc from "../templates/CoverLetterDoc.js";
 import { buildSelectedProfile } from "../utils/buildSelectedProfile.js";
 import { API_BASE_URL } from "../api/config.js";
@@ -66,6 +69,7 @@ export default function JobDescriptionPage() {
   const [selection, setSelection] = useState<SelectionState | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [exportStatus, setExportStatus] = useState<ExportStatus>("idle");
+  const [templateId, setTemplateId] = useState<ResumeTemplateId>(DEFAULT_RESUME_TEMPLATE_ID);
   const [companyName, setCompanyName] = useState("");
   const [hiringManagerName, setHiringManagerName] = useState("");
   const [coverLetterExportStatus, setCoverLetterExportStatus] = useState<CoverLetterExportStatus>("idle");
@@ -121,7 +125,7 @@ export default function JobDescriptionPage() {
     if (!result || !selection) return;
     setExportStatus(`exporting-${format}`);
     try {
-      const version = await createResumeVersion(result.id, selection);
+      const version = await createResumeVersion(result.id, selection, templateId);
       window.open(`${API_BASE_URL}/resume-versions/${version.id}/${format}`, "_blank");
       setExportStatus("idle");
     } catch {
@@ -545,9 +549,25 @@ export default function JobDescriptionPage() {
 
       {selection && profile && (
         <section className="form-section" id="resume-preview">
-          <h2>Resume Preview (Single-Column ATS-Safe)</h2>
+          <h2>Resume Preview</h2>
+          <div className="template-picker">
+            {RESUME_TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={templateId === t.id ? "template-option active" : "template-option"}
+                onClick={() => setTemplateId(t.id)}
+                title={t.description}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
           <div className="resume-preview-frame">
-            <SingleColumnResume resume={buildTailoredResume(profile, selection)} />
+            {(() => {
+              const Template = resolveTemplateComponent(templateId);
+              return <Template resume={buildTailoredResume(profile, selection)} />;
+            })()}
           </div>
         </section>
       )}

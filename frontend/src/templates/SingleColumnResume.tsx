@@ -17,7 +17,7 @@ export default function SingleColumnResume({ resume }: Props) {
   const linksLine = contact.links.map((l) => l.label).filter(Boolean).join(" | ");
 
   return (
-    <div className="resume-doc">
+    <div className="resume-doc resume-print-root">
       <header className="resume-header">
         <div className="resume-name">{contact.name || "Your Name"}</div>
         {contactLine && <div className="resume-contact-line">{contactLine}</div>}

@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import {
   scoreProfile,
   buildTailoredResume,
+  isResumeTemplateId,
+  DEFAULT_RESUME_TEMPLATE_ID,
   type ExtractedRequirements,
   type ResumeVersion,
   type SelectionState,
@@ -12,8 +14,6 @@ import { getOrCreateDefaultProfileDoc } from "../services/profileStore.js";
 import { toProfile } from "../utils/profileMapper.js";
 import { renderResumeVersionToPdf } from "../export/pdf.js";
 import { buildResumeDocx } from "../export/docx.js";
-
-const TEMPLATE_NAME = "single-column";
 
 function toResumeVersion(doc: any): ResumeVersion {
   const obj = doc.toObject();
@@ -29,14 +29,16 @@ function toResumeVersion(doc: any): ResumeVersion {
 }
 
 export async function createResumeVersion(req: Request, res: Response): Promise<void> {
-  const { jobDescriptionId, selection } = req.body as {
+  const { jobDescriptionId, selection, templateName } = req.body as {
     jobDescriptionId?: string;
     selection?: SelectionState;
+    templateName?: string;
   };
   if (!jobDescriptionId || !selection) {
     res.status(400).json({ error: "jobDescriptionId and selection are required" });
     return;
   }
+  const resolvedTemplateName = isResumeTemplateId(templateName) ? templateName : DEFAULT_RESUME_TEMPLATE_ID;
 
   const jdDoc = await JobDescriptionModel.findById(jobDescriptionId);
   if (!jdDoc) {
@@ -51,7 +53,7 @@ export async function createResumeVersion(req: Request, res: Response): Promise<
 
   const doc = await ResumeVersionModel.create({
     jobDescriptionId,
-    templateName: TEMPLATE_NAME,
+    templateName: resolvedTemplateName,
     profileSnapshot: profile,
     selection,
     overallScore: relevance.overallScore,

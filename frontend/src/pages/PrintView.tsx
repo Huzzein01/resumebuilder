@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { buildTailoredResume, type ResumeVersion } from "@resumebuilder/shared";
 import { fetchResumeVersion } from "../api/resumeVersionApi.js";
-import SingleColumnResume from "../templates/SingleColumnResume.js";
+import { resolveTemplateComponent } from "../templates/registry.js";
 
 interface Props {
   id: string;
@@ -22,5 +22,6 @@ export default function PrintView({ id }: Props) {
   if (!version) return <div>Loading…</div>;
 
   const resume = buildTailoredResume(version.profileSnapshot, version.selection);
-  return <SingleColumnResume resume={resume} />;
+  const Template = resolveTemplateComponent(version.templateName);
+  return <Template resume={resume} />;
 }

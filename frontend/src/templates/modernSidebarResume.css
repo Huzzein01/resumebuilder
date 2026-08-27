@@ -1,0 +1,147 @@
+.ms-resume-doc {
+  display: flex;
+  max-width: 760px;
+  margin: 0 auto;
+  background: #ffffff;
+  color: #1a1a1a;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.45;
+  min-height: 100%;
+}
+
+.ms-sidebar {
+  width: 230px;
+  flex: none;
+  background: #0e6e5d;
+  color: #ffffff;
+  padding: 32px 22px;
+}
+
+.ms-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 24px;
+  word-break: break-word;
+}
+
+.ms-sidebar-section {
+  margin-bottom: 22px;
+}
+
+.ms-sidebar-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #cdeee4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.ms-sidebar-line {
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+  word-break: break-word;
+}
+
+.ms-sidebar-entry {
+  margin-bottom: 10px;
+}
+
+.ms-sidebar-entry-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.ms-skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ms-skill-tag {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.ms-main {
+  flex: 1;
+  padding: 32px 30px;
+}
+
+.ms-section {
+  margin-bottom: 18px;
+}
+
+.ms-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0e6e5d;
+  border-bottom: 2px solid #0e6e5d;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+}
+
+.ms-summary {
+  font-size: 0.9rem;
+  margin: 0;
+  color: #333333;
+}
+
+.ms-entry {
+  margin-bottom: 12px;
+}
+
+.ms-entry-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+
+.ms-entry-title {
+  font-weight: 700;
+}
+
+.ms-entry-company {
+  font-weight: 400;
+  color: #555555;
+}
+
+.ms-entry-dates {
+  font-size: 0.8rem;
+  color: #666666;
+  white-space: nowrap;
+}
+
+.ms-tech-stack {
+  font-style: italic;
+  font-size: 0.82rem;
+  color: #555555;
+  margin: 2px 0 4px;
+}
+
+.ms-bullet-list {
+  margin: 5px 0 0;
+  padding-left: 18px;
+}
+
+.ms-bullet {
+  font-size: 0.88rem;
+  margin-bottom: 3px;
+  color: #222222;
+}
+
+@media print {
+  .ms-sidebar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

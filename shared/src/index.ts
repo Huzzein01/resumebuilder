@@ -7,3 +7,4 @@ export * from "./buildTailoredResume.js";
 export * from "./coverLetter.js";
 export * from "./skillValidator.js";
 export * from "./richText.js";
+export * from "./resumeTemplates.js";
