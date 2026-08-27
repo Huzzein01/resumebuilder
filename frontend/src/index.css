@@ -496,6 +496,63 @@ section.form-section h3 {
   font-weight: 700;
 }
 
+/* ---------- AI mode toggle ---------- */
+
+.ai-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  padding: 5px 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.ai-mode-toggle-label {
+  color: var(--faint);
+  transition: color 0.15s ease;
+}
+
+.ai-mode-toggle:not(.on) .ai-mode-toggle-label-off {
+  color: var(--ink);
+}
+
+.ai-mode-toggle.on .ai-mode-toggle-label-on {
+  color: var(--accent);
+}
+
+.ai-mode-toggle-track {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--line);
+  transition: background 0.15s ease;
+}
+
+.ai-mode-toggle.on .ai-mode-toggle-track {
+  background: var(--accent);
+}
+
+.ai-mode-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: transform 0.15s ease;
+}
+
+.ai-mode-toggle.on .ai-mode-toggle-thumb {
+  transform: translateX(14px);
+}
+
 .pill-missing {
   background: var(--accent-soft);
   color: var(--accent);

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useShellSlots } from "./ShellContext.js";
+import AiModeToggle from "../components/AiModeToggle.js";
 
 type Tab = "profile" | "jobDescription";
 
@@ -41,6 +42,7 @@ export default function AppShell({ activeTab, onTabChange, saveStatus, children 
           </button>
         </nav>
         <div className="shell-topbar-extra">
+          <AiModeToggle />
           {topBarExtra}
           {saveStatus}
         </div>

@@ -1,5 +1,6 @@
 import type { Profile, ProfileImportResult } from "@resumebuilder/shared";
 import { API_BASE_URL } from "./config.js";
+import { aiModeHeader } from "../aiMode.js";
 
 export async function fetchProfile(): Promise<Profile> {
   const res = await fetch(`${API_BASE_URL}/profile`);
@@ -20,7 +21,11 @@ export async function saveProfile(profile: Profile): Promise<Profile> {
 export async function importProfile(file: File): Promise<ProfileImportResult> {
   const formData = new FormData();
   formData.append("resume", file);
-  const res = await fetch(`${API_BASE_URL}/profile/import`, { method: "POST", body: formData });
+  const res = await fetch(`${API_BASE_URL}/profile/import`, {
+    method: "POST",
+    body: formData,
+    headers: aiModeHeader(),
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Failed to import resume: ${res.status}`);
