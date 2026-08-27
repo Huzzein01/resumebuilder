@@ -55,6 +55,8 @@ export default function JobDescriptionPage() {
   const [rawText, setRawText] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<JobDescription | null>(null);
+  const [analysisMethod, setAnalysisMethod] = useState<"llm" | "deterministic" | null>(null);
+  const [additionalSkillsDetected, setAdditionalSkillsDetected] = useState<string[]>([]);
   const [history, setHistory] = useState<JobDescription[]>([]);
   const [scoreStatus, setScoreStatus] = useState<ScoreStatus>("idle");
   const [relevance, setRelevance] = useState<RelevanceResult | null>(null);
@@ -78,9 +80,11 @@ export default function JobDescriptionPage() {
     setStatus("analyzing");
     setRelevance(null);
     try {
-      const jd = await submitJobDescription(rawText);
-      setResult(jd);
-      setHistory((prev) => [jd, ...prev]);
+      const { jobDescription, method, additionalSkillsDetected: extra } = await submitJobDescription(rawText);
+      setResult(jobDescription);
+      setAnalysisMethod(method);
+      setAdditionalSkillsDetected(extra ?? []);
+      setHistory((prev) => [jobDescription, ...prev]);
       setStatus("idle");
     } catch {
       setStatus("error");
@@ -387,7 +391,14 @@ export default function JobDescriptionPage() {
 
       {result && (
         <section className="form-section" id="requirements">
-          <h2>Extracted Requirements</h2>
+          <h2>
+            Extracted Requirements{" "}
+            {analysisMethod === "llm" ? (
+              <span className="pill pill-ai">AI-enhanced</span>
+            ) : (
+              <span className="pill pill-nice">Rule-based</span>
+            )}
+          </h2>
           <p>
             <strong>Seniority:</strong> {seniorityLabel(result)}
           </p>
@@ -413,6 +424,21 @@ export default function JobDescriptionPage() {
               </span>
             ))}
           </div>
+          {additionalSkillsDetected.length > 0 && (
+            <>
+              <p>
+                <strong>Also noticed by AI</strong>{" "}
+                <span className="status">(not in our skill database yet, so not scored)</span>
+              </p>
+              <div className="pill-row">
+                {additionalSkillsDetected.map((name) => (
+                  <span className="pill pill-ai" key={name}>
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
           <button onClick={handleScore} disabled={scoreStatus === "scoring"}>
             {scoreStatus === "scoring" ? "Scoring…" : "Score against my profile"}
           </button>

@@ -1,10 +1,11 @@
-import type { JobDescription } from "@resumebuilder/shared";
+import type { JobDescription, JobDescriptionAnalysisResult } from "@resumebuilder/shared";
 import { API_BASE_URL } from "./config.js";
+import { aiModeHeader } from "../aiMode.js";
 
-export async function submitJobDescription(rawText: string): Promise<JobDescription> {
+export async function submitJobDescription(rawText: string): Promise<JobDescriptionAnalysisResult> {
   const res = await fetch(`${API_BASE_URL}/job-descriptions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...aiModeHeader() },
     body: JSON.stringify({ rawText }),
   });
   if (!res.ok) throw new Error(`Failed to analyze job description: ${res.status}`);

@@ -125,6 +125,15 @@ export interface JobDescription {
   requirements: ExtractedRequirements;
 }
 
+export interface JobDescriptionAnalysisResult {
+  jobDescription: JobDescription;
+  /** Whether an LLM enhanced the deterministic requirements extraction (merged in, not replaced -- see profileImportController for the equivalent pattern on resume import). */
+  method: "llm" | "deterministic";
+  provider?: string;
+  /** Skill names the LLM noticed that don't resolve to anything in our curated taxonomy -- shown to the user as informational only, since they can't participate in skillId-keyed scoring without a taxonomy entry. */
+  additionalSkillsDetected?: string[];
+}
+
 export type SkillMatchType = "must-have" | "nice-to-have" | "keyword" | "none";
 
 export interface SkillScore {
