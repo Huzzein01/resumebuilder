@@ -21,6 +21,8 @@ import SingleColumnResume from "../templates/SingleColumnResume.js";
 import CoverLetterDoc from "../templates/CoverLetterDoc.js";
 import { buildSelectedProfile } from "../utils/buildSelectedProfile.js";
 import { API_BASE_URL } from "../api/config.js";
+import SectionNav, { type SectionNavItem } from "../components/SectionNav.js";
+import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "idle" | "analyzing" | "error";
 type ScoreStatus = "idle" | "scoring" | "error";
@@ -43,6 +45,10 @@ function seniorityLabel(jd: JobDescription): string {
   if (level !== "unknown") parts.push(level);
   if (yearsRequired !== undefined) parts.push(`${yearsRequired}+ yrs`);
   return parts.length > 0 ? parts.join(" · ") : "No signal detected";
+}
+
+function jumpTo(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export default function JobDescriptionPage() {
@@ -282,13 +288,67 @@ export default function JobDescriptionPage() {
   const tailoredRelevance = computeTailoredRelevance();
   const coverLetter = computeCoverLetter();
 
+  const sectionItems: SectionNavItem[] = [
+    { id: "job-description", label: "Job Description", icon: "📋" },
+    {
+      id: "requirements",
+      label: "Requirements",
+      icon: "🔍",
+      disabled: !result,
+      disabledHint: "Analyze a job description first",
+    },
+    {
+      id: "build-resume",
+      label: "Build Resume",
+      icon: "🧩",
+      disabled: !relevance,
+      disabledHint: "Score against your profile first",
+    },
+    {
+      id: "resume-preview",
+      label: "Resume Preview",
+      icon: "📄",
+      disabled: !selection,
+      disabledHint: "Score against your profile first",
+    },
+    {
+      id: "ats-score",
+      label: "ATS Score",
+      icon: "📊",
+      disabled: !tailoredRelevance,
+      disabledHint: "Score against your profile first",
+    },
+    {
+      id: "cover-letter",
+      label: "Cover Letter",
+      icon: "✉️",
+      disabled: !coverLetter,
+      disabledHint: "Score against your profile first",
+    },
+    { id: "history", label: "History", icon: "🕘", disabled: history.length === 0, disabledHint: "No past job descriptions yet" },
+  ];
+
+  useSetSidebar(<SectionNav items={sectionItems} />);
+
+  // Cover Letter gets a permanent, always-visible action in the top bar --
+  // it used to only exist after scrolling past three other gated sections,
+  // which made it effectively undiscoverable.
+  useSetTopBarExtra(
+    <button
+      className={coverLetter ? "primary" : ""}
+      onClick={() => jumpTo("cover-letter")}
+      disabled={!coverLetter}
+      title={!coverLetter ? "Score against your profile to unlock the cover letter" : undefined}
+    >
+      ✉️ Cover Letter
+    </button>
+  );
+
   return (
     <div className="app">
-      <div className="toolbar">
-        <h1>Tailor Your Resume</h1>
-      </div>
+      <h1 className="page-title">Tailor Your Resume</h1>
 
-      <section className="form-section">
+      <section className="form-section" id="job-description">
         <h2>Paste a Job Description</h2>
         <div className="field">
           <textarea
@@ -305,7 +365,7 @@ export default function JobDescriptionPage() {
       </section>
 
       {result && (
-        <section className="form-section">
+        <section className="form-section" id="requirements">
           <h2>Extracted Requirements</h2>
           <p>
             <strong>Seniority:</strong> {seniorityLabel(result)}
@@ -340,7 +400,7 @@ export default function JobDescriptionPage() {
       )}
 
       {selection && profile && relevance && (
-        <section className="form-section">
+        <section className="form-section" id="build-resume">
           <h2>Build Your Resume</h2>
           <p className="status">
             Auto-selected and ranked for this job. Drag to reorder, use the checkbox to include/exclude.
@@ -384,7 +444,7 @@ export default function JobDescriptionPage() {
       )}
 
       {selection && profile && (
-        <section className="form-section">
+        <section className="form-section" id="resume-preview">
           <h2>Resume Preview (Single-Column ATS-Safe)</h2>
           <div className="resume-preview-frame">
             <SingleColumnResume resume={buildTailoredResume(profile, selection)} />
@@ -393,7 +453,7 @@ export default function JobDescriptionPage() {
       )}
 
       {tailoredRelevance && (
-        <section className="form-section">
+        <section className="form-section" id="ats-score">
           <h2>ATS Score Preview</h2>
           <p className="status">
             Reflects exactly what's currently selected — updates live as you toggle or reorder above.
@@ -463,7 +523,7 @@ export default function JobDescriptionPage() {
       )}
 
       {coverLetter && (
-        <section className="form-section">
+        <section className="form-section" id="cover-letter">
           <h2>Cover Letter</h2>
           <p className="status">
             Templated from your matched skills and top selected achievement — no AI, fully derived from the data
@@ -502,7 +562,7 @@ export default function JobDescriptionPage() {
       )}
 
       {history.length > 0 && (
-        <section className="form-section">
+        <section className="form-section" id="history">
           <h2>History</h2>
           {history.map((jd) => (
             <div className="entry-card" key={jd.id}>

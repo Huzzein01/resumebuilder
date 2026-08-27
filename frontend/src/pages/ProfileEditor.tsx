@@ -10,6 +10,8 @@ import SkillsForm from "../components/SkillsForm.js";
 import EducationForm from "../components/EducationForm.js";
 import CertificationsForm from "../components/CertificationsForm.js";
 import ScoreGauge from "../components/ScoreGauge.js";
+import SectionNav from "../components/SectionNav.js";
+import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
 type ImportStatus = "idle" | "importing" | "imported" | "error";
@@ -32,6 +34,20 @@ function targetLabel(targetType: ScanTargetType): string {
       return "Overall";
   }
 }
+
+const SECTION_ITEMS = [
+  { id: "resume-health", label: "Resume Health", icon: "❤️", group: "Insights" },
+  { id: "skill-validation", label: "Skill Validation", icon: "✅", group: "Insights" },
+  { id: "import", label: "Import from Resume", icon: "⬆️", group: "Insights" },
+  { id: "contact-info", label: "Contact Info", icon: "👤", group: "Profile" },
+  { id: "summary", label: "Summary", icon: "📝", group: "Profile" },
+  { id: "work-experience", label: "Work Experience", icon: "💼", group: "Profile" },
+  { id: "projects", label: "Projects", icon: "🛠️", group: "Profile" },
+  { id: "volunteer-work", label: "Volunteer Work", icon: "🤝", group: "Profile" },
+  { id: "skills", label: "Skills", icon: "✨", group: "Profile" },
+  { id: "education", label: "Education", icon: "🎓", group: "Profile" },
+  { id: "certifications", label: "Certifications", icon: "🏅", group: "Profile" },
+] as const;
 
 export default function ProfileEditor() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -77,6 +93,29 @@ export default function ProfileEditor() {
     }
   }
 
+  useSetSidebar(
+    <>
+      {["Insights", "Profile"].map((group) => (
+        <div key={group}>
+          <div className="section-nav-label-group">{group}</div>
+          <SectionNav items={SECTION_ITEMS.filter((i) => i.group === group)} />
+        </div>
+      ))}
+    </>
+  );
+
+  useSetTopBarExtra(
+    <>
+      <span className="status">
+        {status === "saved" && "Saved"}
+        {status === "error" && "Something went wrong"}
+      </span>
+      <button className="primary" onClick={handleSave} disabled={status === "saving" || !profile}>
+        {status === "saving" ? "Saving…" : "Save"}
+      </button>
+    </>
+  );
+
   if (status === "loading") return <div className="app">Loading profile…</div>;
   if (!profile) return <div className="app">Failed to load profile.</div>;
 
@@ -85,18 +124,9 @@ export default function ProfileEditor() {
 
   return (
     <div className="app">
-      <div className="toolbar">
-        <h1>Master Profile</h1>
-        <button className="primary" onClick={handleSave} disabled={status === "saving"}>
-          {status === "saving" ? "Saving…" : "Save"}
-        </button>
-        <span className="status">
-          {status === "saved" && "Saved"}
-          {status === "error" && "Something went wrong"}
-        </span>
-      </div>
+      <h1 className="page-title">Master Profile</h1>
 
-      <section className="form-section">
+      <section className="form-section" id="import">
         <h2>Import from Resume</h2>
         <p className="status">
           Best-effort, rule-based parsing of a .pdf or .docx resume — it will misparse some layouts. Nothing is
@@ -118,7 +148,7 @@ export default function ProfileEditor() {
         {importStatus === "error" && <p className="status">{importError}</p>}
       </section>
 
-      <section className="form-section">
+      <section className="form-section" id="resume-health">
         <h2>Resume Health</h2>
         <p className="status">Rule-based checks, recomputed live as you edit — no AI involved.</p>
         <div className="score-card-top">
@@ -146,7 +176,7 @@ export default function ProfileEditor() {
         )}
       </section>
 
-      <section className="form-section">
+      <section className="form-section" id="skill-validation">
         <h2>Skill Validation</h2>
         <p className="status">
           Cross-references your listed skills against the rest of your resume — keyword presence only, not a
@@ -176,29 +206,42 @@ export default function ProfileEditor() {
         )}
       </section>
 
-      <ContactForm contact={profile.contact} onChange={(contact) => setProfile({ ...profile, contact })} />
-      <SummaryForm summary={profile.summary} onChange={(summary) => setProfile({ ...profile, summary })} />
-      <WorkExperienceForm
-        entries={profile.workExperience}
-        onChange={(workExperience) => setProfile({ ...profile, workExperience })}
-      />
-      <ProjectsForm
-        entries={profile.projects}
-        onChange={(projects) => setProfile({ ...profile, projects })}
-      />
-      <VolunteerWorkForm
-        entries={profile.volunteerWork}
-        onChange={(volunteerWork) => setProfile({ ...profile, volunteerWork })}
-      />
-      <SkillsForm skills={profile.skills} onChange={(skills) => setProfile({ ...profile, skills })} />
-      <EducationForm
-        entries={profile.education}
-        onChange={(education) => setProfile({ ...profile, education })}
-      />
-      <CertificationsForm
-        entries={profile.certifications}
-        onChange={(certifications) => setProfile({ ...profile, certifications })}
-      />
+      <div id="contact-info">
+        <ContactForm contact={profile.contact} onChange={(contact) => setProfile({ ...profile, contact })} />
+      </div>
+      <div id="summary">
+        <SummaryForm summary={profile.summary} onChange={(summary) => setProfile({ ...profile, summary })} />
+      </div>
+      <div id="work-experience">
+        <WorkExperienceForm
+          entries={profile.workExperience}
+          onChange={(workExperience) => setProfile({ ...profile, workExperience })}
+        />
+      </div>
+      <div id="projects">
+        <ProjectsForm entries={profile.projects} onChange={(projects) => setProfile({ ...profile, projects })} />
+      </div>
+      <div id="volunteer-work">
+        <VolunteerWorkForm
+          entries={profile.volunteerWork}
+          onChange={(volunteerWork) => setProfile({ ...profile, volunteerWork })}
+        />
+      </div>
+      <div id="skills">
+        <SkillsForm skills={profile.skills} onChange={(skills) => setProfile({ ...profile, skills })} />
+      </div>
+      <div id="education">
+        <EducationForm
+          entries={profile.education}
+          onChange={(education) => setProfile({ ...profile, education })}
+        />
+      </div>
+      <div id="certifications">
+        <CertificationsForm
+          entries={profile.certifications}
+          onChange={(certifications) => setProfile({ ...profile, certifications })}
+        />
+      </div>
     </div>
   );
 }
