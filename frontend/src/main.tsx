@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.js";
 import PrintView from "./pages/PrintView.js";
 import PrintCoverLetterView from "./pages/PrintCoverLetterView.js";
+import ErrorBoundary from "./components/ErrorBoundary.js";
 import "./index.css";
 
 const coverLetterMatch = window.location.pathname.match(/^\/print\/cover-letter\/([^/]+)$/);
@@ -23,4 +24,8 @@ function resolvePage() {
   return <App />;
 }
 
-ReactDOM.createRoot(document.getElementById("root")!).render(<React.StrictMode>{resolvePage()}</React.StrictMode>);
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <ErrorBoundary>{resolvePage()}</ErrorBoundary>
+  </React.StrictMode>
+);

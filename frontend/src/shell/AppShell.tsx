@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useShellSlots } from "./ShellContext.js";
 import AiModeToggle from "../components/AiModeToggle.js";
+import Logo from "../components/Logo.js";
 
 type Tab = "profile" | "jobDescription";
 
@@ -25,9 +26,7 @@ export default function AppShell({ activeTab, onTabChange, saveStatus, children 
     <div className="shell">
       <header className="shell-topbar">
         <div className="shell-brand">
-          <span className="brand-mark" aria-hidden="true">
-            🧵
-          </span>
+          <Logo />
           <span className="brand-name">Resume Tailor</span>
         </div>
         <nav className="shell-tabs" aria-label="Main">
