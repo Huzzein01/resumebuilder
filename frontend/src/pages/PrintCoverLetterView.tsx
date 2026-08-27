@@ -15,8 +15,9 @@ export default function PrintCoverLetterView({ id, companyName, hiringManagerNam
 
   useEffect(() => {
     document.body.classList.add("print-mode");
-    fetchCoverLetter(id, { companyName, hiringManagerName })
-      .then(setLetter)
+    const ai = new URLSearchParams(window.location.search).get("ai") === "true";
+    fetchCoverLetter(id, { companyName, hiringManagerName, ai })
+      .then(({ letter }) => setLetter(letter))
       .catch(() => setError(true));
   }, [id, companyName, hiringManagerName]);
 

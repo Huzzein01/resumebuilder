@@ -8,12 +8,13 @@ import {
   type Profile,
   type SelectionState,
   type ItemSelection,
+  type CoverLetterContent,
 } from "@resumebuilder/shared";
 import { submitJobDescription, fetchJobDescriptions } from "../api/jobDescriptionApi.js";
 import { fetchRelevance } from "../api/relevanceApi.js";
 import { fetchSelection } from "../api/selectionApi.js";
 import { fetchProfile } from "../api/profileApi.js";
-import { createResumeVersion } from "../api/resumeVersionApi.js";
+import { createResumeVersion, fetchCoverLetter } from "../api/resumeVersionApi.js";
 import DraggableChecklist, { type ChecklistItem } from "../components/DraggableChecklist.js";
 import ScoreGauge from "../components/ScoreGauge.js";
 import CoverageBar from "../components/CoverageBar.js";
@@ -23,12 +24,14 @@ import { buildSelectedProfile } from "../utils/buildSelectedProfile.js";
 import { API_BASE_URL } from "../api/config.js";
 import SectionNav, { type SectionNavItem } from "../components/SectionNav.js";
 import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
+import { useAiMode } from "../shell/AiModeContext.js";
 
 type Status = "idle" | "analyzing" | "error";
 type ScoreStatus = "idle" | "scoring" | "error";
 type ExportFormat = "pdf" | "docx";
 type ExportStatus = "idle" | `exporting-${ExportFormat}` | "error";
 type CoverLetterExportStatus = "idle" | `exporting-${ExportFormat}` | "error";
+type AiCoverLetterStatus = "idle" | "generating" | "error";
 
 function toggleItem<T extends ItemSelection>(items: T[], id: string): T[] {
   return items.map((item) => (item.id === id ? { ...item, selected: !item.selected } : item));
@@ -66,6 +69,11 @@ export default function JobDescriptionPage() {
   const [companyName, setCompanyName] = useState("");
   const [hiringManagerName, setHiringManagerName] = useState("");
   const [coverLetterExportStatus, setCoverLetterExportStatus] = useState<CoverLetterExportStatus>("idle");
+  const [aiCoverLetter, setAiCoverLetter] = useState<CoverLetterContent | null>(null);
+  const [aiCoverLetterStatus, setAiCoverLetterStatus] = useState<AiCoverLetterStatus>("idle");
+  const [aiCoverLetterMethod, setAiCoverLetterMethod] = useState<"llm" | "deterministic" | null>(null);
+  const [aiCoverLetterExportStatus, setAiCoverLetterExportStatus] = useState<CoverLetterExportStatus>("idle");
+  const { enabled: aiModeEnabled } = useAiMode();
 
   useEffect(() => {
     fetchJobDescriptions()
@@ -137,6 +145,43 @@ export default function JobDescriptionPage() {
       setCoverLetterExportStatus("idle");
     } catch {
       setCoverLetterExportStatus("error");
+    }
+  }
+
+  // Explicit opt-in, separate from the always-available templated letter above --
+  // never triggered automatically, and clicking it is the only way this ever runs
+  // regardless of the global AI Mode toggle (which just gates whether the button
+  // is usable at all).
+  async function handleGenerateAiCoverLetter() {
+    if (!result || !selection) return;
+    setAiCoverLetterStatus("generating");
+    try {
+      const version = await createResumeVersion(result.id, selection);
+      const { letter, method } = await fetchCoverLetter(version.id, {
+        companyName: companyName.trim() || undefined,
+        hiringManagerName: hiringManagerName.trim() || undefined,
+        ai: true,
+      });
+      setAiCoverLetter(letter);
+      setAiCoverLetterMethod(method);
+      setAiCoverLetterStatus("idle");
+    } catch {
+      setAiCoverLetterStatus("error");
+    }
+  }
+
+  async function handleExportAiCoverLetter(format: ExportFormat) {
+    if (!result || !selection) return;
+    setAiCoverLetterExportStatus(`exporting-${format}`);
+    try {
+      const version = await createResumeVersion(result.id, selection);
+      const params = new URLSearchParams({ ai: "true" });
+      if (companyName.trim()) params.set("companyName", companyName.trim());
+      if (hiringManagerName.trim()) params.set("hiringManagerName", hiringManagerName.trim());
+      window.open(`${API_BASE_URL}/resume-versions/${version.id}/cover-letter/${format}?${params.toString()}`, "_blank");
+      setAiCoverLetterExportStatus("idle");
+    } catch {
+      setAiCoverLetterExportStatus("error");
     }
   }
 
@@ -303,6 +348,7 @@ export default function JobDescriptionPage() {
   const hasSelection = !!selection;
   const hasTailoredRelevance = !!tailoredRelevance;
   const hasCoverLetter = !!coverLetter;
+  const hasAiCoverLetter = !!aiCoverLetter;
   const hasHistory = history.length > 0;
 
   const sectionItems: SectionNavItem[] = useMemo(
@@ -343,9 +389,16 @@ export default function JobDescriptionPage() {
         disabled: !hasCoverLetter,
         disabledHint: "Score against your profile first",
       },
+      {
+        id: "ai-cover-letter",
+        label: "AI Cover Letter",
+        icon: "✨",
+        disabled: !hasAiCoverLetter,
+        disabledHint: "Generate one from the Cover Letter section first",
+      },
       { id: "history", label: "History", icon: "🕘", disabled: !hasHistory, disabledHint: "No past job descriptions yet" },
     ],
-    [hasResult, hasRelevance, hasSelection, hasTailoredRelevance, hasCoverLetter, hasHistory]
+    [hasResult, hasRelevance, hasSelection, hasTailoredRelevance, hasCoverLetter, hasAiCoverLetter, hasHistory]
   );
 
   const sidebarNode = useMemo(() => <SectionNav items={sectionItems} />, [sectionItems]);
@@ -605,6 +658,51 @@ export default function JobDescriptionPage() {
             </button>
           </div>
           {coverLetterExportStatus === "error" && <span className="status">Something went wrong</span>}
+
+          <div className="ai-cover-letter-cta">
+            <button
+              onClick={handleGenerateAiCoverLetter}
+              disabled={!aiModeEnabled || aiCoverLetterStatus === "generating"}
+              title={!aiModeEnabled ? "Switch the header to AI mode to use this" : undefined}
+            >
+              <span className="pill pill-ai">AI</span>{" "}
+              {aiCoverLetterStatus === "generating" ? "Generating…" : "Generate an alternate version with AI"}
+            </button>
+            {aiCoverLetterStatus === "error" && <span className="status">Something went wrong</span>}
+          </div>
+        </section>
+      )}
+
+      {aiCoverLetter && (
+        <section className="form-section" id="ai-cover-letter">
+          <h2>
+            AI-Generated Cover Letter{" "}
+            {aiCoverLetterMethod === "deterministic" && <span className="pill pill-nice">Fell back to templated</span>}
+          </h2>
+          <p className="status">
+            A separate, optional alternate version — written by an LLM from the same matched skills and selected
+            achievements as the templated letter above. Review before using; nothing here overwrites the templated
+            version.
+          </p>
+          <div className="resume-preview-frame">
+            <CoverLetterDoc letter={aiCoverLetter} />
+          </div>
+          <div className="export-button-row">
+            <button
+              className="primary"
+              onClick={() => handleExportAiCoverLetter("pdf")}
+              disabled={aiCoverLetterExportStatus !== "idle" && aiCoverLetterExportStatus !== "error"}
+            >
+              {aiCoverLetterExportStatus === "exporting-pdf" ? "Exporting…" : "Export as PDF"}
+            </button>
+            <button
+              onClick={() => handleExportAiCoverLetter("docx")}
+              disabled={aiCoverLetterExportStatus !== "idle" && aiCoverLetterExportStatus !== "error"}
+            >
+              {aiCoverLetterExportStatus === "exporting-docx" ? "Exporting…" : "Export as DOCX"}
+            </button>
+          </div>
+          {aiCoverLetterExportStatus === "error" && <span className="status">Something went wrong</span>}
         </section>
       )}
 

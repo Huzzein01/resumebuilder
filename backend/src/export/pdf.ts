@@ -18,12 +18,13 @@ export async function renderResumeVersionToPdf(resumeVersionId: string): Promise
 
 export async function renderCoverLetterToPdf(
   resumeVersionId: string,
-  options: { companyName?: string; hiringManagerName?: string } = {}
+  options: { companyName?: string; hiringManagerName?: string; ai?: boolean } = {}
 ): Promise<Buffer> {
   const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
   const params = new URLSearchParams();
   if (options.companyName) params.set("companyName", options.companyName);
   if (options.hiringManagerName) params.set("hiringManagerName", options.hiringManagerName);
+  if (options.ai) params.set("ai", "true");
   const query = params.toString();
   const printUrl = `${frontendUrl}/print/cover-letter/${resumeVersionId}${query ? `?${query}` : ""}`;
 

@@ -811,3 +811,12 @@ section.form-section h3 {
   display: flex;
   gap: 10px;
 }
+
+.ai-cover-letter-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}

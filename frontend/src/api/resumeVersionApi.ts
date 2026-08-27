@@ -23,18 +23,30 @@ export async function fetchResumeVersion(id: string): Promise<ResumeVersion> {
 export interface CoverLetterOptions {
   companyName?: string;
   hiringManagerName?: string;
+  /** Explicit per-request opt-in for LLM generation -- independent of the global AI Mode toggle, since this is its own separate "Generate with AI" action, not something that should fire just because the toggle happens to be on. */
+  ai?: boolean;
 }
 
 function coverLetterQuery(options: CoverLetterOptions): string {
   const params = new URLSearchParams();
   if (options.companyName) params.set("companyName", options.companyName);
   if (options.hiringManagerName) params.set("hiringManagerName", options.hiringManagerName);
+  if (options.ai) params.set("ai", "true");
   const query = params.toString();
   return query ? `?${query}` : "";
 }
 
-export async function fetchCoverLetter(id: string, options: CoverLetterOptions = {}): Promise<CoverLetterContent> {
+export interface CoverLetterFetchResult {
+  letter: CoverLetterContent;
+  method: "llm" | "deterministic";
+  provider?: string;
+}
+
+export async function fetchCoverLetter(id: string, options: CoverLetterOptions = {}): Promise<CoverLetterFetchResult> {
   const res = await fetch(`${API_BASE_URL}/resume-versions/${id}/cover-letter${coverLetterQuery(options)}`);
   if (!res.ok) throw new Error(`Failed to fetch cover letter: ${res.status}`);
-  return res.json();
+  const letter: CoverLetterContent = await res.json();
+  const method = res.headers.get("X-Cover-Letter-Method") === "llm" ? "llm" : "deterministic";
+  const provider = res.headers.get("X-Cover-Letter-Provider") ?? undefined;
+  return { letter, method, provider };
 }
