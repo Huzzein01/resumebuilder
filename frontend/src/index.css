@@ -791,6 +791,10 @@ section.form-section h3 {
   background: var(--faint);
 }
 
+.suggestion-severity-dot-ai {
+  background: var(--accent);
+}
+
 .suggestion-body {
   display: flex;
   flex-direction: column;
@@ -812,11 +816,16 @@ section.form-section h3 {
   gap: 10px;
 }
 
-.ai-cover-letter-cta {
+.ai-cover-letter-cta,
+.ai-action-cta {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid var(--line);
+}
+
+.ai-suggestions {
+  margin-top: 14px;
 }

@@ -1,4 +1,4 @@
-import type { Profile, ProfileImportResult } from "@resumebuilder/shared";
+import type { Profile, ProfileImportResult, ResumeHealthAiResult } from "@resumebuilder/shared";
 import { API_BASE_URL } from "./config.js";
 import { aiModeHeader } from "../aiMode.js";
 
@@ -30,5 +30,11 @@ export async function importProfile(file: File): Promise<ProfileImportResult> {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Failed to import resume: ${res.status}`);
   }
+  return res.json();
+}
+
+export async function fetchResumeHealthAi(): Promise<ResumeHealthAiResult> {
+  const res = await fetch(`${API_BASE_URL}/profile/health/ai`, { headers: aiModeHeader() });
+  if (!res.ok) throw new Error(`Failed to fetch AI resume feedback: ${res.status}`);
   return res.json();
 }

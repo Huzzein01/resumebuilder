@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { scanResume, validateSkills, type Profile, type ScanTargetType } from "@resumebuilder/shared";
-import { fetchProfile, saveProfile, importProfile } from "../api/profileApi.js";
+import {
+  scanResume,
+  validateSkills,
+  type Profile,
+  type ScanTargetType,
+  type AiResumeSuggestion,
+} from "@resumebuilder/shared";
+import { fetchProfile, saveProfile, importProfile, fetchResumeHealthAi } from "../api/profileApi.js";
+import { useAiMode } from "../shell/AiModeContext.js";
 import ContactForm from "../components/ContactForm.js";
 import SummaryForm from "../components/SummaryForm.js";
 import WorkExperienceForm from "../components/WorkExperienceForm.js";
@@ -16,6 +23,7 @@ import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
 type ImportStatus = "idle" | "importing" | "imported" | "error";
+type AiHealthStatus = "idle" | "loading" | "loaded" | "error";
 
 function targetLabel(targetType: ScanTargetType): string {
   switch (targetType) {
@@ -56,7 +64,10 @@ export default function ProfileEditor() {
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
+  const [aiHealthStatus, setAiHealthStatus] = useState<AiHealthStatus>("idle");
+  const [aiHealthSuggestions, setAiHealthSuggestions] = useState<AiResumeSuggestion[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { enabled: aiModeEnabled } = useAiMode();
 
   useEffect(() => {
     fetchProfile()
@@ -93,6 +104,17 @@ export default function ProfileEditor() {
       setImportStatus("error");
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleGetAiFeedback() {
+    setAiHealthStatus("loading");
+    try {
+      const { suggestions } = await fetchResumeHealthAi();
+      setAiHealthSuggestions(suggestions);
+      setAiHealthStatus("loaded");
+    } catch {
+      setAiHealthStatus("error");
     }
   }
 
@@ -192,6 +214,42 @@ export default function ProfileEditor() {
               </li>
             ))}
           </ul>
+        )}
+
+        <div className="ai-action-cta">
+          <button
+            type="button"
+            className="secondary"
+            onClick={handleGetAiFeedback}
+            disabled={!aiModeEnabled || aiHealthStatus === "loading"}
+            title={aiModeEnabled ? undefined : "Switch to AI Mode in the header to use this"}
+          >
+            {aiHealthStatus === "loading" ? "Getting AI feedback…" : "Get AI writing feedback"}
+          </button>
+          {aiHealthStatus === "error" && <span className="status">AI feedback isn't available right now.</span>}
+        </div>
+
+        {aiHealthStatus === "loaded" && (
+          <div className="ai-suggestions">
+            <p className="status">
+              Qualitative writing feedback from an AI model — informational only, it never affects the score above.
+            </p>
+            {aiHealthSuggestions.length === 0 ? (
+              <p className="status">No additional feedback — this profile reads well.</p>
+            ) : (
+              <ul className="suggestion-list">
+                {aiHealthSuggestions.map((s) => (
+                  <li key={s.id} className="suggestion">
+                    <span className="suggestion-severity-dot suggestion-severity-dot-ai" aria-hidden="true" />
+                    <div className="suggestion-body">
+                      <span className="suggestion-message">{s.message}</span>
+                      <span className="pill pill-ai suggestion-category-pill">AI</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
       </section>
 

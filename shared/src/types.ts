@@ -281,3 +281,16 @@ export interface SkillValidationFinding {
 export interface SkillValidationResult {
   findings: SkillValidationFinding[];
 }
+
+export interface AiResumeSuggestion {
+  id: string;
+  message: string;
+  targetType: Extract<ScanTargetType, "bullet" | "general">;
+  targetId?: string;
+}
+
+export interface ResumeHealthAiResult {
+  suggestions: AiResumeSuggestion[];
+  method: "llm" | "unavailable";
+  provider?: string;
+}
