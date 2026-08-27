@@ -8,7 +8,7 @@ import {
   TabStopType,
   TabStopPosition,
 } from "docx";
-import type { TailoredResume, TailoredWorkExperience, TailoredProject } from "@resumebuilder/shared";
+import { parseRichText, type TailoredResume, type TailoredWorkExperience, type TailoredProject } from "@resumebuilder/shared";
 
 const PAGE_WIDTH_TWIPS = 12240 - 2 * 1440; // Letter width minus 1" margins each side
 
@@ -62,11 +62,32 @@ function subLineParagraph(text: string): Paragraph {
   });
 }
 
+/** Turns marked-up text (the same subset RichTextField/parseRichText produce) into DOCX TextRuns, so bold/italic/underline survive export instead of silently flattening to plain text. */
+function richTextRuns(text: string, size: number): TextRun[] {
+  return parseRichText(text).map(
+    (seg) =>
+      new TextRun({
+        text: seg.text,
+        size,
+        bold: seg.bold,
+        italics: seg.italic,
+        underline: seg.underline ? {} : undefined,
+      })
+  );
+}
+
 function bulletParagraph(text: string): Paragraph {
   return new Paragraph({
     bullet: { level: 0 },
     spacing: { after: 20 },
-    children: [new TextRun({ text, size: 18 })],
+    children: richTextRuns(text, 18),
+  });
+}
+
+function summaryParagraph(text: string): Paragraph {
+  return new Paragraph({
+    spacing: { after: 40 },
+    children: richTextRuns(text, 18),
   });
 }
 
@@ -85,7 +106,7 @@ function projectParagraphs(project: TailoredProject): Paragraph[] {
 }
 
 export async function buildResumeDocx(resume: TailoredResume): Promise<Buffer> {
-  const { contact, skills, workExperience, projects, education, certifications } = resume;
+  const { contact, summary, skills, workExperience, projects, education, certifications } = resume;
   const contactLine = [contact.email, contact.phone, contact.location].filter(Boolean).join(" | ");
   const linksLine = contact.links
     .map((l) => l.label)
@@ -95,6 +116,11 @@ export async function buildResumeDocx(resume: TailoredResume): Promise<Buffer> {
   const children: Paragraph[] = [nameParagraph(contact.name)];
   if (contactLine) children.push(contactLineParagraph(contactLine));
   if (linksLine) children.push(contactLineParagraph(linksLine));
+
+  if (summary.trim()) {
+    children.push(sectionTitleParagraph("Summary"));
+    children.push(summaryParagraph(summary));
+  }
 
   if (skills.length > 0) {
     children.push(sectionTitleParagraph("Skills"));

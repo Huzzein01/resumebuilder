@@ -1,4 +1,5 @@
 import type { Profile, JobDescription, RelevanceResult, SelectionState, CoverLetterContent } from "./types.js";
+import { stripRichText } from "./richText.js";
 
 function lowerFirst(text: string): string {
   if (!text) return text;
@@ -22,7 +23,11 @@ function findTopSelectedBullet(
     const entry = profile.workExperience.find((w) => w.id === selEntry.id);
     if (!entry) continue;
     const scoreEntry = relevance.workExperienceScores.find((w) => w.id === selEntry.id);
-    const bulletById = new Map(entry.bullets.map((b) => [b.id, b.text]));
+    // Cover letter prose splices this straight into a sentence (and lowercases its
+    // first character) -- strip any bold/italic/underline markup so that operates
+    // on plain text instead of corrupting a leading tag or leaking markup into
+    // what should be plain prose.
+    const bulletById = new Map(entry.bullets.map((b) => [b.id, stripRichText(b.text)]));
     const scoreByBulletId = new Map((scoreEntry?.bulletScores ?? []).map((b) => [b.bulletId, b.score]));
 
     for (const selBullet of selEntry.bullets) {

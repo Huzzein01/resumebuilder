@@ -1,4 +1,5 @@
 import type { Profile, Bullet, WorkExperience, ProjectEntry, ScanSuggestion, ResumeScanResult } from "./types.js";
+import { stripRichText } from "./richText.js";
 
 const WEAK_OPENERS = /^\s*(responsible for|worked on|helped with|duties included|involved in)\b/i;
 const FIRST_PERSON = /\b(i|my|me)\b/i;
@@ -6,12 +7,15 @@ const HAS_METRIC = /\d/;
 const MAX_BULLET_LENGTH = 220;
 
 function normalize(text: string): string {
-  return text.trim().toLowerCase().replace(/\s+/g, " ");
+  return stripRichText(text).trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function scanBullet(bullet: Bullet, targetType: "bullet", context: string): ScanSuggestion[] {
   const suggestions: ScanSuggestion[] = [];
-  const text = bullet.text.trim();
+  // Scan the plain-text form -- otherwise a leading <b> tag defeats the ^-anchored
+  // WEAK_OPENERS check, tag markup inflates the length check, and raw HTML would
+  // leak into the suggestion message previews below.
+  const text = stripRichText(bullet.text).trim();
   if (!text) return suggestions;
 
   if (!HAS_METRIC.test(text)) {

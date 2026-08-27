@@ -1,3 +1,5 @@
+import RichTextField from "./RichTextField.js";
+
 interface Props {
   summary: string;
   onChange: (summary: string) => void;
@@ -8,11 +10,12 @@ export default function SummaryForm({ summary, onChange }: Props) {
     <section className="form-section">
       <h2>Summary</h2>
       <div className="field">
-        <textarea
-          rows={4}
-          placeholder="A brief professional summary..."
+        <RichTextField
           value={summary}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={onChange}
+          placeholder="A brief professional summary..."
+          multiline
+          className="richtext-summary"
         />
       </div>
     </section>

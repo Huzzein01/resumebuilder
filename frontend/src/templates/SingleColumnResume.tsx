@@ -1,4 +1,5 @@
 import type { TailoredResume } from "@resumebuilder/shared";
+import RichText from "../components/RichText.js";
 import "./singleColumnResume.css";
 
 interface Props {
@@ -11,7 +12,7 @@ function dateRange(startDate?: string, endDate?: string): string | null {
 }
 
 export default function SingleColumnResume({ resume }: Props) {
-  const { contact, skills, workExperience, projects, education, certifications } = resume;
+  const { contact, summary, skills, workExperience, projects, education, certifications } = resume;
   const contactLine = [contact.email, contact.phone, contact.location].filter(Boolean).join(" | ");
   const linksLine = contact.links.map((l) => l.label).filter(Boolean).join(" | ");
 
@@ -22,6 +23,15 @@ export default function SingleColumnResume({ resume }: Props) {
         {contactLine && <div className="resume-contact-line">{contactLine}</div>}
         {linksLine && <div className="resume-contact-line">{linksLine}</div>}
       </header>
+
+      {summary.trim() && (
+        <section className="resume-section">
+          <div className="resume-section-title">Summary</div>
+          <p className="resume-summary">
+            <RichText text={summary} />
+          </p>
+        </section>
+      )}
 
       {skills.length > 0 && (
         <section className="resume-section">
@@ -45,7 +55,7 @@ export default function SingleColumnResume({ resume }: Props) {
                 <ul className="resume-bullet-list">
                   {entry.bullets.map((text, i) => (
                     <li className="resume-bullet" key={i}>
-                      {text}
+                      <RichText text={text} />
                     </li>
                   ))}
                 </ul>
@@ -71,7 +81,7 @@ export default function SingleColumnResume({ resume }: Props) {
                 <ul className="resume-bullet-list">
                   {project.bullets.map((text, i) => (
                     <li className="resume-bullet" key={i}>
-                      {text}
+                      <RichText text={text} />
                     </li>
                   ))}
                 </ul>

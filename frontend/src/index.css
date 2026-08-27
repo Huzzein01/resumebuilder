@@ -272,6 +272,90 @@ button.danger:hover {
   margin: 14px 0 18px;
 }
 
+/* ---------- Editor toolbar / rich text ---------- */
+
+.editor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: 6px 8px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+}
+
+.editor-toolbar button {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-control);
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--muted);
+  min-width: 32px;
+}
+
+.editor-toolbar button:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.editor-toolbar-bold {
+  font-weight: 700;
+}
+
+.editor-toolbar-italic {
+  font-style: italic;
+}
+
+.editor-toolbar-underline {
+  text-decoration: underline;
+}
+
+.editor-toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--line);
+  margin: 0 4px;
+}
+
+.richtext-field {
+  min-height: 1.4em;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  outline: none;
+}
+
+.richtext-field:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-color: var(--primary);
+}
+
+.richtext-field[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--faint);
+}
+
+.richtext-summary {
+  min-height: 90px;
+  white-space: pre-wrap;
+}
+
+.richtext-bullet {
+  flex: 1;
+}
+
 /* ---------- Cards ---------- */
 
 section.form-section {

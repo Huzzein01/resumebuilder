@@ -1,5 +1,6 @@
 import type { Bullet } from "@resumebuilder/shared";
 import { v4 as uuid } from "uuid";
+import RichTextField from "./RichTextField.js";
 
 interface Props {
   bullets: Bullet[];
@@ -25,10 +26,11 @@ export default function BulletList({ bullets, onChange }: Props) {
     <div>
       {bullets.map((bullet, i) => (
         <div className="bullet-row" key={bullet.id}>
-          <input
-            placeholder="Bullet point"
+          <RichTextField
             value={bullet.text}
-            onChange={(e) => updateBullet(i, e.target.value)}
+            onChange={(text) => updateBullet(i, text)}
+            placeholder="Bullet point"
+            className="richtext-bullet"
           />
           <button className="danger" onClick={() => removeBullet(i)}>
             Remove

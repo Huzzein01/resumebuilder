@@ -42,6 +42,11 @@
   font-size: 0.9rem;
 }
 
+.resume-summary {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 .resume-entry {
   margin-bottom: 10px;
 }

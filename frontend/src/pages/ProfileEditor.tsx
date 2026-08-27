@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { scanResume, validateSkills, type Profile, type ScanTargetType } from "@resumebuilder/shared";
 import { fetchProfile, saveProfile, importProfile } from "../api/profileApi.js";
 import ContactForm from "../components/ContactForm.js";
@@ -11,6 +11,7 @@ import EducationForm from "../components/EducationForm.js";
 import CertificationsForm from "../components/CertificationsForm.js";
 import ScoreGauge from "../components/ScoreGauge.js";
 import SectionNav from "../components/SectionNav.js";
+import EditorToolbar from "../components/EditorToolbar.js";
 import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
@@ -65,7 +66,7 @@ export default function ProfileEditor() {
       .catch(() => setStatus("error"));
   }, []);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     if (!profile) return;
     setStatus("saving");
     try {
@@ -75,7 +76,7 @@ export default function ProfileEditor() {
     } catch {
       setStatus("error");
     }
-  }
+  }, [profile]);
 
   async function handleImportFile(file: File) {
     if (!profile) return;
@@ -93,28 +94,36 @@ export default function ProfileEditor() {
     }
   }
 
-  useSetSidebar(
-    <>
-      {["Insights", "Profile"].map((group) => (
-        <div key={group}>
-          <div className="section-nav-label-group">{group}</div>
-          <SectionNav items={SECTION_ITEMS.filter((i) => i.group === group)} />
-        </div>
-      ))}
-    </>
+  const sidebarNode = useMemo(
+    () => (
+      <>
+        {["Insights", "Profile"].map((group) => (
+          <div key={group}>
+            <div className="section-nav-label-group">{group}</div>
+            <SectionNav items={SECTION_ITEMS.filter((i) => i.group === group)} />
+          </div>
+        ))}
+      </>
+    ),
+    []
   );
+  useSetSidebar(sidebarNode);
 
-  useSetTopBarExtra(
-    <>
-      <span className="status">
-        {status === "saved" && "Saved"}
-        {status === "error" && "Something went wrong"}
-      </span>
-      <button className="primary" onClick={handleSave} disabled={status === "saving" || !profile}>
-        {status === "saving" ? "Saving…" : "Save"}
-      </button>
-    </>
+  const topBarExtraNode = useMemo(
+    () => (
+      <>
+        <span className="status">
+          {status === "saved" && "Saved"}
+          {status === "error" && "Something went wrong"}
+        </span>
+        <button className="primary" onClick={handleSave} disabled={status === "saving" || !profile}>
+          {status === "saving" ? "Saving…" : "Save"}
+        </button>
+      </>
+    ),
+    [status, profile, handleSave]
   );
+  useSetTopBarExtra(topBarExtraNode);
 
   if (status === "loading") return <div className="app">Loading profile…</div>;
   if (!profile) return <div className="app">Failed to load profile.</div>;
@@ -125,6 +134,7 @@ export default function ProfileEditor() {
   return (
     <div className="app">
       <h1 className="page-title">Master Profile</h1>
+      <EditorToolbar />
 
       <section className="form-section" id="import">
         <h2>Import from Resume</h2>

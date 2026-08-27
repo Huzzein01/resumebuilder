@@ -199,6 +199,7 @@ export interface TailoredProject {
 
 export interface TailoredResume {
   contact: ContactInfo;
+  summary: string;
   workExperience: TailoredWorkExperience[];
   projects: TailoredProject[];
   skills: Skill[];

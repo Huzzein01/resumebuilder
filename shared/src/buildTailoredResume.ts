@@ -48,6 +48,7 @@ export function buildTailoredResume(profile: Profile, selection: SelectionState)
 
   return {
     contact: profile.contact,
+    summary: profile.summary,
     workExperience,
     projects,
     skills,

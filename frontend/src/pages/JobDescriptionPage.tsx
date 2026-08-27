@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   scoreProfile,
   buildTailoredResume,
@@ -288,61 +288,82 @@ export default function JobDescriptionPage() {
   const tailoredRelevance = computeTailoredRelevance();
   const coverLetter = computeCoverLetter();
 
-  const sectionItems: SectionNavItem[] = [
-    { id: "job-description", label: "Job Description", icon: "📋" },
-    {
-      id: "requirements",
-      label: "Requirements",
-      icon: "🔍",
-      disabled: !result,
-      disabledHint: "Analyze a job description first",
-    },
-    {
-      id: "build-resume",
-      label: "Build Resume",
-      icon: "🧩",
-      disabled: !relevance,
-      disabledHint: "Score against your profile first",
-    },
-    {
-      id: "resume-preview",
-      label: "Resume Preview",
-      icon: "📄",
-      disabled: !selection,
-      disabledHint: "Score against your profile first",
-    },
-    {
-      id: "ats-score",
-      label: "ATS Score",
-      icon: "📊",
-      disabled: !tailoredRelevance,
-      disabledHint: "Score against your profile first",
-    },
-    {
-      id: "cover-letter",
-      label: "Cover Letter",
-      icon: "✉️",
-      disabled: !coverLetter,
-      disabledHint: "Score against your profile first",
-    },
-    { id: "history", label: "History", icon: "🕘", disabled: history.length === 0, disabledHint: "No past job descriptions yet" },
-  ];
+  // computeTailoredRelevance()/computeCoverLetter() build a fresh object every
+  // render, so the booleans below (not the objects themselves) are what must
+  // drive memoization -- otherwise sectionItems, and the sidebar/top-bar JSX
+  // built from it, would get a new identity every render regardless of
+  // whether anything actually changed, and the useSetSidebar/useSetTopBarExtra
+  // effects downstream would never stop re-firing.
+  const hasResult = !!result;
+  const hasRelevance = !!relevance;
+  const hasSelection = !!selection;
+  const hasTailoredRelevance = !!tailoredRelevance;
+  const hasCoverLetter = !!coverLetter;
+  const hasHistory = history.length > 0;
 
-  useSetSidebar(<SectionNav items={sectionItems} />);
+  const sectionItems: SectionNavItem[] = useMemo(
+    () => [
+      { id: "job-description", label: "Job Description", icon: "📋" },
+      {
+        id: "requirements",
+        label: "Requirements",
+        icon: "🔍",
+        disabled: !hasResult,
+        disabledHint: "Analyze a job description first",
+      },
+      {
+        id: "build-resume",
+        label: "Build Resume",
+        icon: "🧩",
+        disabled: !hasRelevance,
+        disabledHint: "Score against your profile first",
+      },
+      {
+        id: "resume-preview",
+        label: "Resume Preview",
+        icon: "📄",
+        disabled: !hasSelection,
+        disabledHint: "Score against your profile first",
+      },
+      {
+        id: "ats-score",
+        label: "ATS Score",
+        icon: "📊",
+        disabled: !hasTailoredRelevance,
+        disabledHint: "Score against your profile first",
+      },
+      {
+        id: "cover-letter",
+        label: "Cover Letter",
+        icon: "✉️",
+        disabled: !hasCoverLetter,
+        disabledHint: "Score against your profile first",
+      },
+      { id: "history", label: "History", icon: "🕘", disabled: !hasHistory, disabledHint: "No past job descriptions yet" },
+    ],
+    [hasResult, hasRelevance, hasSelection, hasTailoredRelevance, hasCoverLetter, hasHistory]
+  );
+
+  const sidebarNode = useMemo(() => <SectionNav items={sectionItems} />, [sectionItems]);
+  useSetSidebar(sidebarNode);
 
   // Cover Letter gets a permanent, always-visible action in the top bar --
   // it used to only exist after scrolling past three other gated sections,
   // which made it effectively undiscoverable.
-  useSetTopBarExtra(
-    <button
-      className={coverLetter ? "primary" : ""}
-      onClick={() => jumpTo("cover-letter")}
-      disabled={!coverLetter}
-      title={!coverLetter ? "Score against your profile to unlock the cover letter" : undefined}
-    >
-      ✉️ Cover Letter
-    </button>
+  const topBarExtraNode = useMemo(
+    () => (
+      <button
+        className={hasCoverLetter ? "primary" : ""}
+        onClick={() => jumpTo("cover-letter")}
+        disabled={!hasCoverLetter}
+        title={!hasCoverLetter ? "Score against your profile to unlock the cover letter" : undefined}
+      >
+        ✉️ Cover Letter
+      </button>
+    ),
+    [hasCoverLetter]
   );
+  useSetTopBarExtra(topBarExtraNode);
 
   return (
     <div className="app">

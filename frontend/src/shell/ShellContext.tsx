@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 interface ShellSlots {
   sidebar: ReactNode;
@@ -16,11 +16,17 @@ export function ShellProvider({ children }: { children: ReactNode }) {
   const [sidebar, setSidebar] = useState<ReactNode>(null);
   const [topBarExtra, setTopBarExtra] = useState<ReactNode>(null);
 
-  return (
-    <ShellContext.Provider value={{ sidebar, topBarExtra, setSidebar, setTopBarExtra }}>
-      {children}
-    </ShellContext.Provider>
+  // Without this memo, `value` is a fresh object literal every ShellProvider
+  // render, which forces every context consumer (AppShell, and via it every
+  // page calling useSetSidebar/useSetTopBarExtra) to re-render even when
+  // sidebar/topBarExtra didn't actually change -- amplifying, and possibly by
+  // itself sufficient to cause, an infinite render loop with those hooks.
+  const value = useMemo(
+    () => ({ sidebar, topBarExtra, setSidebar, setTopBarExtra }),
+    [sidebar, topBarExtra]
   );
+
+  return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;
 }
 
 function useShellContext(): ShellContextValue {
@@ -34,20 +40,27 @@ export function useShellSlots(): ShellSlots {
   return { sidebar, topBarExtra };
 }
 
-/** Pages call this to register their sidebar content; cleared automatically on unmount. */
+/**
+ * Pages call this to register their sidebar content; cleared automatically on
+ * unmount. `node` must be referentially stable across renders where its
+ * content hasn't actually changed (wrap it in useMemo at the call site) --
+ * without that, a fresh JSX element every render means this effect's
+ * dependency never matches, the effect never stops firing, and this setState
+ * makes every render of the page trigger another one, forever.
+ */
 export function useSetSidebar(node: ReactNode): void {
   const { setSidebar } = useShellContext();
   useEffect(() => {
     setSidebar(node);
     return () => setSidebar(null);
-  });
+  }, [node, setSidebar]);
 }
 
-/** Pages call this to register content shown on the right side of the top bar (e.g. a promoted action). */
+/** Pages call this to register content shown on the right side of the top bar (e.g. a promoted action). Same memoization requirement as useSetSidebar. */
 export function useSetTopBarExtra(node: ReactNode): void {
   const { setTopBarExtra } = useShellContext();
   useEffect(() => {
     setTopBarExtra(node);
     return () => setTopBarExtra(null);
-  });
+  }, [node, setTopBarExtra]);
 }
