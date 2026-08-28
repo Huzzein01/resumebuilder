@@ -50,8 +50,8 @@ export default function SkillsForm({ skills, onChange }: Props) {
             <label>Aliases (comma-separated)</label>
             <input value={skill.aliases.join(", ")} onChange={(e) => setAliases(i, e.target.value)} />
           </div>
-          <button className="danger" onClick={() => remove(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove skill" title="Remove">
+            ✕
           </button>
         </div>
       ))}

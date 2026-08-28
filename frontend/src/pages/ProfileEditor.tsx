@@ -30,6 +30,7 @@ import ReferencesForm from "../components/ReferencesForm.js";
 import ScoreGauge from "../components/ScoreGauge.js";
 import SectionNav from "../components/SectionNav.js";
 import EditorToolbar from "../components/EditorToolbar.js";
+import EditorQuickActions from "../components/EditorQuickActions.js";
 import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
@@ -671,17 +672,22 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   }
 
   return (
-    <div className="app editor-with-preview">
-      <div className="editor-form-column">
-        <h1 className="page-title">Master Profile</h1>
-        <EditorToolbar
+    <div className="app">
+      <h1 className="page-title">Master Profile</h1>
+
+      <div className="editor-toolbar-row">
+        <EditorToolbar />
+        <EditorQuickActions
           onPreview={() => setPreviewOpen(true)}
           onAiReview={() => {
             setActiveSectionId("resume-health");
             if (aiModeEnabled) handleGetAiFeedback();
           }}
         />
+      </div>
 
+      <div className="editor-with-preview">
+      <div className="editor-form-column">
         {SECTION_TIPS[activeSectionId] && (
           <div className="ai-tip-callout">
             <span className="ai-tip-icon" aria-hidden="true">
@@ -749,7 +755,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
             </button>
           ))}
         </div>
-        <div className="resume-preview-frame editor-preview-frame">
+        <div className="editor-preview-frame">
           <div className="editor-preview-scale-outer">
             <div className="editor-preview-scale-inner">
               <PreviewTemplate resume={buildFullResume(currentProfile)} />
@@ -757,6 +763,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
           </div>
         </div>
       </aside>
+      </div>
 
       {previewOpen && (
         <div className="preview-overlay" onClick={() => setPreviewOpen(false)}>

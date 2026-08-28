@@ -38,8 +38,8 @@ export default function CertificationsForm({ entries, onChange }: Props) {
             <label>Date</label>
             <input value={entry.date ?? ""} onChange={(e) => update(i, { date: e.target.value })} />
           </div>
-          <button className="danger" onClick={() => remove(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove certification" title="Remove">
+            ✕
           </button>
         </div>
       ))}

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { useShellSlots } from "./ShellContext.js";
-import AiModeToggle from "../components/AiModeToggle.js";
 import Logo from "../components/Logo.js";
 import AccountMenu from "../components/AccountMenu.js";
 
@@ -33,7 +32,6 @@ export default function AppShell({ onHome, showClose, saveStatus, children }: Ap
           <span className="brand-name">Resume Tailor</span>
         </button>
         <div className="shell-topbar-extra">
-          <AiModeToggle />
           {topBarExtra}
           {saveStatus}
           <AccountMenu />

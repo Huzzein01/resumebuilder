@@ -67,9 +67,11 @@ export default function ProjectsForm({ entries, onChange }: Props) {
             </div>
           </div>
           <BulletList bullets={entry.bullets} onChange={(bullets) => update(i, { bullets })} />
-          <button className="danger" onClick={() => remove(i)}>
-            Remove Project
-          </button>
+          <div className="entry-card-footer">
+            <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove project" title="Remove project">
+              ✕
+            </button>
+          </div>
         </div>
       ))}
       <button onClick={add}>+ Add Project</button>

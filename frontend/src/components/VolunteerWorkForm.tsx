@@ -61,9 +61,11 @@ export default function VolunteerWorkForm({ entries, onChange }: Props) {
             bullets={entry.bullets}
             onChange={(bullets) => update(i, { bullets })}
           />
-          <button className="danger" onClick={() => remove(i)}>
-            Remove Entry
-          </button>
+          <div className="entry-card-footer">
+            <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove volunteer work entry" title="Remove entry">
+              ✕
+            </button>
+          </div>
         </div>
       ))}
       <button onClick={add}>+ Add Volunteer Work</button>

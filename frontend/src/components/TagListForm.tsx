@@ -31,8 +31,8 @@ export default function TagListForm({ title, helpText, tags, onChange, placehold
           <div className="field">
             <input value={tag} placeholder={placeholder} onChange={(e) => update(i, e.target.value)} />
           </div>
-          <button className="danger" onClick={() => remove(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove item" title="Remove">
+            ✕
           </button>
         </div>
       ))}

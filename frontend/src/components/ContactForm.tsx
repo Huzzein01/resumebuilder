@@ -60,8 +60,8 @@ export default function ContactForm({ contact, onChange }: Props) {
             value={link.url}
             onChange={(e) => updateLink(i, { ...link, url: e.target.value })}
           />
-          <button className="danger" onClick={() => removeLink(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => removeLink(i)} aria-label="Remove link" title="Remove">
+            ✕
           </button>
         </div>
       ))}

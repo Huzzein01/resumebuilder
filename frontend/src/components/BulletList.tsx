@@ -32,8 +32,8 @@ export default function BulletList({ bullets, onChange }: Props) {
             placeholder="Bullet point"
             className="richtext-bullet"
           />
-          <button className="danger" onClick={() => removeBullet(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => removeBullet(i)} aria-label="Remove bullet" title="Remove">
+            ✕
           </button>
         </div>
       ))}

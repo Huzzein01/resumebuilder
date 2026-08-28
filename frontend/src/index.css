@@ -266,6 +266,42 @@ button.danger:hover {
   border-color: var(--accent);
 }
 
+/* Compact icon-only remove control for entries/bullets/tags/links within
+   the resume forms -- replaces the old full-size "Remove"/"Remove Entry"
+   pill button (same visual weight as Save or Next, disproportionate for a
+   single-glyph per-row action repeated many times down a long form). */
+.entry-remove-btn {
+  flex: none;
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+.entry-remove-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent-soft-line);
+  background: var(--accent-soft);
+}
+
+/* Right-aligns an entry-remove-btn that sits below an entry-card's fields
+   (not inline in a field-row/bullet-row), instead of it floating at the
+   left edge on its own line. */
+.entry-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* ---------- Page header ---------- */
 
 .toolbar {
@@ -1341,12 +1377,18 @@ section.form-section h3 {
   flex-direction: column;
 }
 
+/* No card/border/background of its own -- the resume template's own white
+   page (.resume-doc, which carries its own background/padding) IS the
+   visible block, filling this frame edge to edge, rather than being a
+   thumbnail sitting inside a separate grey card. */
 .editor-preview-frame {
   flex: 1;
   min-height: 520px;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
-  padding: 14px;
+  overflow-x: hidden;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
 }
 
 .editor-preview-scale-outer {
@@ -1356,9 +1398,10 @@ section.form-section h3 {
 .editor-preview-scale-inner {
   /* zoom (unlike transform: scale) shrinks the layout box along with the
      paint, so the outer wrapper auto-sizes to the scaled-down height --
-     no manual height math needed, and no leftover blank space. */
+     no manual height math needed, and no leftover blank space. Scaled to
+     the exact column width so the resume page fills it edge to edge. */
   width: 760px;
-  zoom: 0.42;
+  zoom: 0.447;
 }
 
 @media (max-width: 900px) {

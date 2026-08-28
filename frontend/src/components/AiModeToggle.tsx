@@ -4,9 +4,10 @@ import { useAiMode } from "../shell/AiModeContext.js";
  * Global switch between Manual (deterministic/rule-based only, the default)
  * and AI mode (LLM calls attempted where a feature has an AI-augmented path,
  * still falling back to the deterministic result if no provider is
- * configured or the call fails). Lives in the persistent top bar -- not a
- * per-page setting -- since it governs every AI-augmentable feature across
- * the app, not just whichever page happens to be open.
+ * configured or the call fails). Governs every AI-augmentable feature across
+ * the whole app, but lives on the Settings page (not the persistent top bar)
+ * -- a global switch that isn't reached for every editing session doesn't
+ * need to compete for space in the toolbar.
  */
 export default function AiModeToggle() {
   const { enabled, setEnabled } = useAiMode();

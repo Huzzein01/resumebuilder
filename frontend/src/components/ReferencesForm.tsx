@@ -46,8 +46,8 @@ export default function ReferencesForm({ entries, onChange }: Props) {
             <label>Phone</label>
             <input value={entry.phone ?? ""} onChange={(e) => update(i, { phone: e.target.value })} />
           </div>
-          <button className="danger" onClick={() => remove(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove reference" title="Remove">
+            ✕
           </button>
         </div>
       ))}

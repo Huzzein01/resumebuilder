@@ -72,9 +72,11 @@ export default function SimpleEntryForm({
             )}
           </div>
           <BulletList bullets={entry.bullets} onChange={(bullets) => update(i, { bullets })} />
-          <button className="danger" onClick={() => remove(i)}>
-            Remove Entry
-          </button>
+          <div className="entry-card-footer">
+            <button className="entry-remove-btn" onClick={() => remove(i)} aria-label={`Remove ${title.toLowerCase()} entry`} title="Remove entry">
+              ✕
+            </button>
+          </div>
         </div>
       ))}
       <button onClick={add}>+ {addLabel ?? `Add ${title}`}</button>

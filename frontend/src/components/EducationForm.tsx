@@ -55,8 +55,8 @@ export default function EducationForm({ entries, onChange }: Props) {
               onChange={(e) => update(i, { endDate: e.target.value })}
             />
           </div>
-          <button className="danger" onClick={() => remove(i)}>
-            Remove
+          <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove education entry" title="Remove">
+            ✕
           </button>
         </div>
       ))}

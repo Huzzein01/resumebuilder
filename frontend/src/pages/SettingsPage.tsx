@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import GlobalNav from "../components/GlobalNav.js";
+import AiModeToggle from "../components/AiModeToggle.js";
 import { useSetSidebar } from "../shell/ShellContext.js";
 
 const STORAGE_KEY = "resumebuilder.notificationSettings";
@@ -55,6 +56,16 @@ export default function SettingsPage() {
           <span>Updates about new features</span>
           <input type="checkbox" checked={settings.newFeatures} onChange={() => toggle("newFeatures")} />
         </label>
+      </section>
+
+      <section className="form-section">
+        <h2>AI Features</h2>
+        <p className="status">
+          When on, AI-augmented features (resume health feedback, cover letter generation, JD requirement
+          extraction, career tools) call an LLM provider -- falling back to rule-based results if one isn't
+          configured or the call fails. Off by default; every feature works fully without it.
+        </p>
+        <AiModeToggle />
       </section>
 
       <section className="form-section">
