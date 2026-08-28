@@ -2,12 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   scanResume,
   validateSkills,
+  buildFullResume,
+  RESUME_TEMPLATES,
+  DEFAULT_RESUME_TEMPLATE_ID,
   type Profile,
   type ScanTargetType,
   type AiResumeSuggestion,
+  type ResumeTemplateId,
 } from "@resumebuilder/shared";
 import { fetchProfile, saveProfile, importProfile, fetchResumeHealthAi } from "../api/profileApi.js";
 import { useAiMode } from "../shell/AiModeContext.js";
+import { resolveTemplateComponent } from "../templates/registry.js";
 import ContactForm from "../components/ContactForm.js";
 import SummaryForm from "../components/SummaryForm.js";
 import WorkExperienceForm from "../components/WorkExperienceForm.js";
@@ -85,6 +90,7 @@ export default function ProfileEditor() {
   const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
   const [aiHealthStatus, setAiHealthStatus] = useState<AiHealthStatus>("idle");
   const [aiHealthSuggestions, setAiHealthSuggestions] = useState<AiResumeSuggestion[]>([]);
+  const [templateId, setTemplateId] = useState<ResumeTemplateId>(DEFAULT_RESUME_TEMPLATE_ID);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { enabled: aiModeEnabled } = useAiMode();
 
@@ -174,8 +180,11 @@ export default function ProfileEditor() {
   const scan = scanResume(profile);
   const skillValidation = validateSkills(profile);
 
+  const PreviewTemplate = resolveTemplateComponent(templateId);
+
   return (
-    <div className="app">
+    <div className="app editor-with-preview">
+    <div className="editor-form-column">
       <h1 className="page-title">Master Profile</h1>
       <EditorToolbar />
 
@@ -446,6 +455,30 @@ export default function ProfileEditor() {
       <div id="references">
         <ReferencesForm entries={profile.references} onChange={(references) => setProfile({ ...profile, references })} />
       </div>
+    </div>
+
+      <aside className="editor-preview-column">
+        <div className="template-picker">
+          {RESUME_TEMPLATES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={templateId === t.id ? "template-option active" : "template-option"}
+              onClick={() => setTemplateId(t.id)}
+              title={t.description}
+            >
+              {t.name}
+            </button>
+          ))}
+        </div>
+        <div className="resume-preview-frame editor-preview-frame">
+          <div className="editor-preview-scale-outer">
+            <div className="editor-preview-scale-inner">
+              <PreviewTemplate resume={buildFullResume(profile)} />
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

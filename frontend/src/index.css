@@ -1197,6 +1197,54 @@ section.form-section h3 {
   font-weight: 600;
 }
 
+/* ---- Resume Builder split-pane editor ---- */
+
+.editor-with-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.editor-form-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-preview-column {
+  width: 380px;
+  flex: none;
+  position: sticky;
+  top: 20px;
+}
+
+.editor-preview-frame {
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.editor-preview-scale-outer {
+  width: 100%;
+}
+
+.editor-preview-scale-inner {
+  /* zoom (unlike transform: scale) shrinks the layout box along with the
+     paint, so the outer wrapper auto-sizes to the scaled-down height --
+     no manual height math needed, and no leftover blank space. */
+  width: 760px;
+  zoom: 0.46;
+}
+
+@media (max-width: 900px) {
+  .editor-with-preview {
+    flex-direction: column;
+  }
+  .editor-preview-column {
+    width: 100%;
+    position: static;
+  }
+}
+
 .settings-toggle-row {
   display: flex;
   align-items: center;

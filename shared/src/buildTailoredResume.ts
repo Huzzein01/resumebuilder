@@ -74,3 +74,52 @@ export function buildTailoredResume(profile: Profile, selection: SelectionState)
     references: profile.references,
   };
 }
+
+/**
+ * Renders the whole master profile as a TailoredResume with nothing
+ * filtered out -- used for the Resume Builder editor's own live preview,
+ * where there's no job description/selection to tailor against yet (that
+ * only exists once you're in the Tailor Resume flow). Every bullet from
+ * every entry is included, unlike buildTailoredResume which only includes
+ * what a SelectionState marks selected.
+ */
+export function buildFullResume(profile: Profile): TailoredResume {
+  return {
+    contact: profile.contact,
+    summary: profile.summary,
+    workExperience: profile.workExperience.map((w) => ({
+      id: w.id,
+      title: w.title,
+      company: w.company,
+      startDate: w.startDate,
+      endDate: w.endDate,
+      bullets: w.bullets.map((b) => b.text).filter((text) => text.trim().length > 0),
+    })),
+    projects: profile.projects.map((p) => ({
+      id: p.id,
+      name: p.name,
+      startDate: p.startDate,
+      endDate: p.endDate,
+      techStack: p.techStack,
+      bullets: p.bullets.map((b) => b.text).filter((text) => text.trim().length > 0),
+    })),
+    skills: profile.skills,
+    education: profile.education,
+    certifications: profile.certifications,
+    volunteerWork: profile.volunteerWork,
+    researchExperience: profile.researchExperience,
+    leadership: profile.leadership,
+    extraCurricular: profile.extraCurricular,
+    associations: profile.associations,
+    awardsAndHonors: profile.awardsAndHonors,
+    conferencesPresentations: profile.conferencesPresentations,
+    courses: profile.courses,
+    patents: profile.patents,
+    publications: profile.publications,
+    publicationsAbstract: profile.publicationsAbstract,
+    languages: profile.languages,
+    hobbiesAndInterests: profile.hobbiesAndInterests,
+    testScores: profile.testScores,
+    references: profile.references,
+  };
+}
