@@ -84,6 +84,15 @@ const SECTION_ITEMS = [
 
 const DEFAULT_SECTION_ID = "contact-info";
 
+/** Static, evergreen coaching tips shown as an inline callout at the top of a section -- not derived from the user's current data (unlike Resume Health's suggestions), so they're always relevant even on a blank section. */
+const SECTION_TIPS: Partial<Record<string, string>> = {
+  summary: 'Keep it to 2-3 sentences -- lead with your strongest, most specific achievement.',
+  "work-experience": 'Quantify results with numbers, e.g. "increased conversion by 18%."',
+  projects: "Mention the tech stack and a measurable outcome or scale, not just what it does.",
+  skills: "List skills relevant to the roles you're targeting -- specific tools beat generic buzzwords.",
+  "volunteer-work": "Treat it like work experience -- lead with impact, not just a list of duties.",
+};
+
 interface ProfileEditorProps {
   initialTemplateId?: ResumeTemplateId;
 }
@@ -92,6 +101,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [activeSectionId, setActiveSectionId] = useState<string>(DEFAULT_SECTION_ID);
+  const [sectionSearch, setSectionSearch] = useState("");
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
@@ -165,22 +175,66 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
     }
   }
 
+  // Computed here (not just after the loading guard below) so the sidebar's
+  // persistent score widget can show it on every section, not only when
+  // "Resume Health" happens to be the active one -- nullable since profile
+  // may not have loaded yet, handled with a plain conditional (not a hook),
+  // so this doesn't affect hook call order. Memoized: both functions return
+  // a fresh object every call, and an unmemoized `scan` sits in sidebarNode's
+  // useMemo deps below -- a new reference every render would recompute
+  // sidebarNode every render, which useSetSidebar pushes into shell state,
+  // triggering another render, in an infinite loop ("Maximum update depth
+  // exceeded").
+  const scan = useMemo(() => (profile ? scanResume(profile) : null), [profile]);
+  const skillValidation = useMemo(() => (profile ? validateSkills(profile) : null), [profile]);
+
+  const filteredSectionItems = useMemo(
+    () =>
+      sectionSearch.trim()
+        ? SECTION_ITEMS.filter((i) => i.label.toLowerCase().includes(sectionSearch.trim().toLowerCase()))
+        : SECTION_ITEMS,
+    [sectionSearch]
+  );
+
   const sidebarNode = useMemo(
     () => (
       <>
-        {["Insights", "Profile"].map((group) => (
-          <div key={group}>
-            <div className="section-nav-label-group">{group}</div>
-            <SectionNav
-              items={SECTION_ITEMS.filter((i) => i.group === group)}
-              activeId={activeSectionId}
-              onSelect={setActiveSectionId}
-            />
+        <input
+          className="section-search"
+          type="search"
+          placeholder="Search sections"
+          value={sectionSearch}
+          onChange={(e) => setSectionSearch(e.target.value)}
+        />
+        {["Insights", "Profile"].map((group) => {
+          const items = filteredSectionItems.filter((i) => i.group === group);
+          if (items.length === 0) return null;
+          return (
+            <div key={group}>
+              <div className="section-nav-label-group">{group}</div>
+              <SectionNav items={items} activeId={activeSectionId} onSelect={setActiveSectionId} />
+            </div>
+          );
+        })}
+        {filteredSectionItems.length === 0 && <p className="status section-search-empty">No sections match.</p>}
+
+        {scan && (
+          <div className="sidebar-score-widget">
+            <div className="sidebar-score-header">
+              <span>RESUME SCORE</span>
+              <span className="sidebar-score-value">{scan.score}%</span>
+            </div>
+            <div className="sidebar-score-bar">
+              <div className="sidebar-score-bar-fill" style={{ width: `${scan.score}%` }} />
+            </div>
+            {scan.suggestions.length > 0 && (
+              <p className="sidebar-score-tip">{scan.suggestions[0].message}</p>
+            )}
           </div>
-        ))}
+        )}
       </>
     ),
-    [activeSectionId]
+    [activeSectionId, sectionSearch, filteredSectionItems, scan]
   );
   useSetSidebar(sidebarNode);
 
@@ -202,13 +256,14 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
 
   if (status === "loading") return <div className="app">Loading profile…</div>;
   if (!profile) return <div className="app">Failed to load profile.</div>;
-  // A separately-typed (non-nullable) binding for renderActiveSection below:
-  // it's a nested function, so TS's null-narrowing from the guard above
+  // Separately-typed (non-nullable) bindings for renderActiveSection below:
+  // it's a nested function, so TS's null-narrowing from the guards above
   // doesn't carry into its closure the way it does within this same scope.
+  // scan/skillValidation are guaranteed non-null here too (same `profile`
+  // check they were derived from above), just not provably so to TS.
   const currentProfile: Profile = profile;
-
-  const scan = scanResume(currentProfile);
-  const skillValidation = validateSkills(currentProfile);
+  const currentScan = scan as NonNullable<typeof scan>;
+  const currentSkillValidation = skillValidation as NonNullable<typeof skillValidation>;
 
   const activeTemplateId = hoveredTemplateId ?? templateId;
   const PreviewTemplate = resolveTemplateComponent(activeTemplateId);
@@ -263,18 +318,18 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
             <h2>Resume Health</h2>
             <p className="status">Rule-based checks, recomputed live as you edit — no AI involved.</p>
             <div className="score-card-top">
-              <ScoreGauge score={scan.score} />
+              <ScoreGauge score={currentScan.score} />
               <div className="scan-summary">
                 <p>
-                  {scan.suggestions.length === 0
+                  {currentScan.suggestions.length === 0
                     ? "No suggestions — this profile looks solid."
-                    : `${scan.suggestions.length} suggestion${scan.suggestions.length === 1 ? "" : "s"} to strengthen this resume.`}
+                    : `${currentScan.suggestions.length} suggestion${currentScan.suggestions.length === 1 ? "" : "s"} to strengthen this resume.`}
                 </p>
               </div>
             </div>
-            {scan.suggestions.length > 0 && (
+            {currentScan.suggestions.length > 0 && (
               <ul className="suggestion-list">
-                {scan.suggestions.map((s) => (
+                {currentScan.suggestions.map((s) => (
                   <li key={s.id} className="suggestion">
                     <span
                       className={`suggestion-severity-dot suggestion-severity-dot-${s.severity}`}
@@ -359,11 +414,11 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
               Cross-references your listed skills against the rest of your resume — keyword presence only, not a
               judgment of proficiency.
             </p>
-            {skillValidation.findings.length === 0 ? (
+            {currentSkillValidation.findings.length === 0 ? (
               <p className="status">No findings.</p>
             ) : (
               <ul className="suggestion-list">
-                {skillValidation.findings.map((f) => (
+                {currentSkillValidation.findings.map((f) => (
                   <li key={f.id} className="suggestion">
                     <span
                       className={`suggestion-severity-dot suggestion-severity-dot-${
@@ -577,6 +632,17 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
             if (aiModeEnabled) handleGetAiFeedback();
           }}
         />
+
+        {SECTION_TIPS[activeSectionId] && (
+          <div className="ai-tip-callout">
+            <span className="ai-tip-icon" aria-hidden="true">
+              ✨
+            </span>
+            <span>
+              <strong>AI tip</strong> — {SECTION_TIPS[activeSectionId]}
+            </span>
+          </div>
+        )}
 
         {renderActiveSection()}
 
