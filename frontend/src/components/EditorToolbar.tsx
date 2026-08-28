@@ -13,20 +13,28 @@ interface EditorToolbarProps {
  * one toolbar, not one per field), plus quick-access buttons to the other
  * resume tools, matching the reference design's editor header.
  *
- * Two things intentionally not implemented here, rather than faked:
- * - Bulleted-list formatting inside a single rich-text field: each bullet
- *   is already its own list item at the data level (BulletList's "+ Add
- *   Bullet"), and our RichText sanitizer only recognizes bold/italic/
- *   underline -- an execCommand("insertUnorderedList") button would
- *   silently produce markup the sanitizer immediately strips back out.
- * - Inline comments/annotations: a real feature (threads, persistence,
- *   resolution), not a toolbar button; not built in this pass.
+ * One thing intentionally not implemented here, rather than faked:
+ * inline comments/annotations -- a real feature (threads, persistence,
+ * resolution), not a toolbar button; not built in this pass.
  */
 export default function EditorToolbar({ onPreview, onAiReview }: EditorToolbarProps) {
   const { navigate } = useNav();
 
   function run(command: string) {
     document.execCommand(command);
+  }
+
+  /**
+   * Deliberately not execCommand("insertUnorderedList"): that produces real
+   * <ul><li> DOM, which the RichText sanitizer (only b/i/u are in its
+   * allowed-tag set, shared with the DOCX exporter so both stay in sync)
+   * would silently strip back out on the next save. Instead this inserts a
+   * literal "• " at the cursor -- plain text, so it round-trips through
+   * sanitizeRichText/parseRichText/the DOCX exporter exactly like any other
+   * character, with no schema changes needed anywhere.
+   */
+  function insertBullet() {
+    document.execCommand("insertText", false, "• ");
   }
 
   return (
@@ -80,6 +88,15 @@ export default function EditorToolbar({ onPreview, onAiReview }: EditorToolbarPr
           onClick={() => run("underline")}
         >
           U
+        </button>
+        <button
+          type="button"
+          title="Bulleted list"
+          aria-label="Insert bullet"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={insertBullet}
+        >
+          ☰•
         </button>
       </div>
 

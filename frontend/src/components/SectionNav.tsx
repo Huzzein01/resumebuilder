@@ -10,19 +10,33 @@ export interface SectionNavItem {
 
 interface SectionNavProps {
   items: SectionNavItem[];
+  /**
+   * Controlled mode: the parent owns which item is active and what
+   * clicking does (e.g. a wizard where each section is its own page, not a
+   * scroll anchor). Pass both to switch out of the default scroll-to-anchor
+   * + IntersectionObserver behavior below.
+   */
+  activeId?: string;
+  onSelect?: (id: string) => void;
 }
 
 /**
- * Left sidebar section nav, scoped to whatever scrollable container the page
- * renders (`.shell-main`). Clicking scrolls the target section into view;
- * an IntersectionObserver keeps the active item in sync with actual scroll
- * position so it still works if the user scrolls manually instead of clicking.
+ * Left sidebar section nav. In the default (uncontrolled) mode it's scoped
+ * to whatever scrollable container the page renders (`.shell-main`):
+ * clicking scrolls the target section into view, and an IntersectionObserver
+ * keeps the active item in sync with actual scroll position so it still
+ * works if the user scrolls manually instead of clicking. In controlled
+ * mode (activeId/onSelect both passed) it's a plain page switcher --
+ * there's nothing to scroll to since only one section renders at a time.
  */
-export default function SectionNav({ items }: SectionNavProps) {
-  const [activeId, setActiveId] = useState(items.find((i) => !i.disabled)?.id ?? items[0]?.id);
+export default function SectionNav({ items, activeId: controlledActiveId, onSelect }: SectionNavProps) {
+  const isControlled = controlledActiveId !== undefined && onSelect !== undefined;
+  const [internalActiveId, setInternalActiveId] = useState(items.find((i) => !i.disabled)?.id ?? items[0]?.id);
+  const activeId = isControlled ? controlledActiveId : internalActiveId;
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
+    if (isControlled) return;
     const visible = new Map<string, number>();
     observerRef.current?.disconnect();
 
@@ -35,7 +49,7 @@ export default function SectionNav({ items }: SectionNavProps) {
         }
         if (visible.size === 0) return;
         const [topId] = [...visible.entries()].sort((a, b) => b[1] - a[1])[0];
-        setActiveId(topId);
+        setInternalActiveId(topId);
       },
       { root: document.querySelector(".shell-main"), threshold: [0.1, 0.3, 0.6] }
     );
@@ -46,13 +60,17 @@ export default function SectionNav({ items }: SectionNavProps) {
     }
     observerRef.current = observer;
     return () => observer.disconnect();
-  }, [items]);
+  }, [items, isControlled]);
 
   function handleClick(item: SectionNavItem) {
     if (item.disabled) return;
+    if (isControlled) {
+      onSelect(item.id);
+      return;
+    }
     const el = document.getElementById(item.id);
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setActiveId(item.id);
+    setInternalActiveId(item.id);
   }
 
   return (

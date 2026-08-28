@@ -55,9 +55,9 @@ function targetLabel(targetType: ScanTargetType): string {
 }
 
 const SECTION_ITEMS = [
+  { id: "import", label: "Import from Resume", icon: "⬆️", group: "Insights" },
   { id: "resume-health", label: "Resume Health", icon: "❤️", group: "Insights" },
   { id: "skill-validation", label: "Skill Validation", icon: "✅", group: "Insights" },
-  { id: "import", label: "Import from Resume", icon: "⬆️", group: "Insights" },
   { id: "contact-info", label: "Contact Info", icon: "👤", group: "Profile" },
   { id: "summary", label: "Summary", icon: "📝", group: "Profile" },
   { id: "work-experience", label: "Work Experience", icon: "💼", group: "Profile" },
@@ -82,6 +82,8 @@ const SECTION_ITEMS = [
   { id: "references", label: "References", icon: "👥", group: "Profile" },
 ] as const;
 
+const DEFAULT_SECTION_ID = "contact-info";
+
 interface ProfileEditorProps {
   initialTemplateId?: ResumeTemplateId;
 }
@@ -89,6 +91,7 @@ interface ProfileEditorProps {
 export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<Status>("loading");
+  const [activeSectionId, setActiveSectionId] = useState<string>(DEFAULT_SECTION_ID);
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
@@ -168,12 +171,16 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         {["Insights", "Profile"].map((group) => (
           <div key={group}>
             <div className="section-nav-label-group">{group}</div>
-            <SectionNav items={SECTION_ITEMS.filter((i) => i.group === group)} />
+            <SectionNav
+              items={SECTION_ITEMS.filter((i) => i.group === group)}
+              activeId={activeSectionId}
+              onSelect={setActiveSectionId}
+            />
           </div>
         ))}
       </>
     ),
-    []
+    [activeSectionId]
   );
   useSetSidebar(sidebarNode);
 
@@ -195,324 +202,421 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
 
   if (status === "loading") return <div className="app">Loading profile…</div>;
   if (!profile) return <div className="app">Failed to load profile.</div>;
+  // A separately-typed (non-nullable) binding for renderActiveSection below:
+  // it's a nested function, so TS's null-narrowing from the guard above
+  // doesn't carry into its closure the way it does within this same scope.
+  const currentProfile: Profile = profile;
 
-  const scan = scanResume(profile);
-  const skillValidation = validateSkills(profile);
+  const scan = scanResume(currentProfile);
+  const skillValidation = validateSkills(currentProfile);
 
   const activeTemplateId = hoveredTemplateId ?? templateId;
   const PreviewTemplate = resolveTemplateComponent(activeTemplateId);
 
+  const activeIndex = SECTION_ITEMS.findIndex((i) => i.id === activeSectionId);
+  const prevItem = activeIndex > 0 ? SECTION_ITEMS[activeIndex - 1] : null;
+  const nextItem = activeIndex >= 0 && activeIndex < SECTION_ITEMS.length - 1 ? SECTION_ITEMS[activeIndex + 1] : null;
+
+  function renderActiveSection() {
+    switch (activeSectionId) {
+      case "import":
+        return (
+          <section className="form-section" id="import">
+            <h2>Import from Resume</h2>
+            <p className="status">
+              Best-effort, rule-based parsing of a .pdf or .docx resume — it will misparse some layouts. Nothing is
+              saved until you review the form below and click Save.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImportFile(file);
+              }}
+            />
+            {importStatus === "importing" && <p className="status">Parsing…</p>}
+            {importStatus === "imported" && (
+              <p className="status">
+                {importMethod === "llm" ? (
+                  <span className="pill pill-ai">AI-parsed</span>
+                ) : (
+                  <span className="pill pill-nice">Rule-based parse</span>
+                )}{" "}
+                — review and correct the fields on the other sections before saving.
+              </p>
+            )}
+            {importStatus === "error" && <p className="status">{importError}</p>}
+            {importStatus === "imported" && !aiModeEnabled && (
+              <p className="status">
+                Switch to AI Mode before importing to get an automatic strengths/weaknesses grade on the parsed
+                resume.
+              </p>
+            )}
+          </section>
+        );
+
+      case "resume-health":
+        return (
+          <section className="form-section" id="resume-health">
+            <h2>Resume Health</h2>
+            <p className="status">Rule-based checks, recomputed live as you edit — no AI involved.</p>
+            <div className="score-card-top">
+              <ScoreGauge score={scan.score} />
+              <div className="scan-summary">
+                <p>
+                  {scan.suggestions.length === 0
+                    ? "No suggestions — this profile looks solid."
+                    : `${scan.suggestions.length} suggestion${scan.suggestions.length === 1 ? "" : "s"} to strengthen this resume.`}
+                </p>
+              </div>
+            </div>
+            {scan.suggestions.length > 0 && (
+              <ul className="suggestion-list">
+                {scan.suggestions.map((s) => (
+                  <li key={s.id} className="suggestion">
+                    <span
+                      className={`suggestion-severity-dot suggestion-severity-dot-${s.severity}`}
+                      aria-hidden="true"
+                    />
+                    <div className="suggestion-body">
+                      <span className="suggestion-message">{s.message}</span>
+                      <span className="pill pill-nice suggestion-category-pill">{targetLabel(s.targetType)}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="ai-action-cta">
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => handleGetAiFeedback()}
+                disabled={!aiModeEnabled || aiHealthStatus === "loading"}
+                title={aiModeEnabled ? undefined : "Switch to AI Mode in the header to use this"}
+              >
+                {aiHealthStatus === "loading" ? "Getting AI feedback…" : "Get AI writing feedback"}
+              </button>
+              {aiHealthStatus === "error" && <span className="status">AI feedback isn't available right now.</span>}
+            </div>
+
+            {aiHealthStatus === "loaded" && (
+              <div className="ai-suggestions">
+                <p className="status">
+                  {aiHealthAutoTriggered ? "Auto-graded right after import — " : ""}
+                  Qualitative feedback from an AI model — informational only, it never affects the score above.
+                </p>
+
+                {aiHealthStrengths.length > 0 && (
+                  <>
+                    <p className="ai-suggestions-subhead">Strengths</p>
+                    <ul className="suggestion-list">
+                      {aiHealthStrengths.map((s, i) => (
+                        <li key={i} className="suggestion">
+                          <span className="suggestion-severity-dot suggestion-severity-dot-strength" aria-hidden="true" />
+                          <div className="suggestion-body">
+                            <span className="suggestion-message">{s}</span>
+                            <span className="pill pill-ai suggestion-category-pill">AI</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {aiHealthSuggestions.length > 0 && (
+                  <>
+                    <p className="ai-suggestions-subhead">Suggested improvements</p>
+                    <ul className="suggestion-list">
+                      {aiHealthSuggestions.map((s) => (
+                        <li key={s.id} className="suggestion">
+                          <span className="suggestion-severity-dot suggestion-severity-dot-ai" aria-hidden="true" />
+                          <div className="suggestion-body">
+                            <span className="suggestion-message">{s.message}</span>
+                            <span className="pill pill-ai suggestion-category-pill">AI</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {aiHealthStrengths.length === 0 && aiHealthSuggestions.length === 0 && (
+                  <p className="status">No additional feedback — this profile reads well.</p>
+                )}
+              </div>
+            )}
+          </section>
+        );
+
+      case "skill-validation":
+        return (
+          <section className="form-section" id="skill-validation">
+            <h2>Skill Validation</h2>
+            <p className="status">
+              Cross-references your listed skills against the rest of your resume — keyword presence only, not a
+              judgment of proficiency.
+            </p>
+            {skillValidation.findings.length === 0 ? (
+              <p className="status">No findings.</p>
+            ) : (
+              <ul className="suggestion-list">
+                {skillValidation.findings.map((f) => (
+                  <li key={f.id} className="suggestion">
+                    <span
+                      className={`suggestion-severity-dot suggestion-severity-dot-${
+                        f.type === "unsubstantiated" ? "medium" : "low"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <div className="suggestion-body">
+                      <span className="suggestion-message">{f.message}</span>
+                      <span className="pill pill-nice suggestion-category-pill">
+                        {f.type === "unsubstantiated" ? "Unsubstantiated" : "Not listed"}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        );
+
+      case "contact-info":
+        return <ContactForm contact={currentProfile.contact} onChange={(contact) => setProfile({ ...currentProfile, contact })} />;
+
+      case "summary":
+        return <SummaryForm summary={currentProfile.summary} onChange={(summary) => setProfile({ ...currentProfile, summary })} />;
+
+      case "work-experience":
+        return (
+          <WorkExperienceForm
+            entries={currentProfile.workExperience}
+            onChange={(workExperience) => setProfile({ ...currentProfile, workExperience })}
+          />
+        );
+
+      case "projects":
+        return <ProjectsForm entries={currentProfile.projects} onChange={(projects) => setProfile({ ...currentProfile, projects })} />;
+
+      case "volunteer-work":
+        return (
+          <VolunteerWorkForm
+            entries={currentProfile.volunteerWork}
+            onChange={(volunteerWork) => setProfile({ ...currentProfile, volunteerWork })}
+          />
+        );
+
+      case "skills":
+        return <SkillsForm skills={currentProfile.skills} onChange={(skills) => setProfile({ ...currentProfile, skills })} />;
+
+      case "education":
+        return (
+          <EducationForm entries={currentProfile.education} onChange={(education) => setProfile({ ...currentProfile, education })} />
+        );
+
+      case "certifications":
+        return (
+          <CertificationsForm
+            entries={currentProfile.certifications}
+            onChange={(certifications) => setProfile({ ...currentProfile, certifications })}
+          />
+        );
+
+      case "research-experience":
+        return (
+          <SimpleEntryForm
+            title="Research Experience"
+            entries={currentProfile.researchExperience}
+            onChange={(researchExperience) => setProfile({ ...currentProfile, researchExperience })}
+            subtitleLabel="Institution/Lab"
+          />
+        );
+
+      case "leadership":
+        return (
+          <SimpleEntryForm
+            title="Leadership"
+            entries={currentProfile.leadership}
+            onChange={(leadership) => setProfile({ ...currentProfile, leadership })}
+          />
+        );
+
+      case "extra-curricular":
+        return (
+          <SimpleEntryForm
+            title="Extra Curricular Activities"
+            entries={currentProfile.extraCurricular}
+            onChange={(extraCurricular) => setProfile({ ...currentProfile, extraCurricular })}
+            addLabel="Add Activity"
+          />
+        );
+
+      case "publications":
+        return (
+          <BulletListSection
+            title="Publications"
+            helpText="One entry per publication -- title, authors, venue, however you'd cite it."
+            bullets={currentProfile.publications}
+            onChange={(publications) => setProfile({ ...currentProfile, publications })}
+          />
+        );
+
+      case "publications-abstract":
+        return (
+          <BulletListSection
+            title="Publications Abstract"
+            helpText="Short abstracts for the publications above, if you'd like to include them."
+            bullets={currentProfile.publicationsAbstract}
+            onChange={(publicationsAbstract) => setProfile({ ...currentProfile, publicationsAbstract })}
+          />
+        );
+
+      case "languages":
+        return (
+          <TagListForm
+            title="Languages"
+            tags={currentProfile.languages}
+            onChange={(languages) => setProfile({ ...currentProfile, languages })}
+            placeholder="e.g. Spanish (fluent)"
+          />
+        );
+
+      case "associations":
+        return (
+          <SimpleEntryForm
+            title="Associations"
+            entries={currentProfile.associations}
+            onChange={(associations) => setProfile({ ...currentProfile, associations })}
+            titleLabel="Role"
+            subtitleLabel="Organization"
+          />
+        );
+
+      case "hobbies-interests":
+        return (
+          <TagListForm
+            title="Hobbies & Interests"
+            tags={currentProfile.hobbiesAndInterests}
+            onChange={(hobbiesAndInterests) => setProfile({ ...currentProfile, hobbiesAndInterests })}
+            placeholder="e.g. Rock climbing"
+          />
+        );
+
+      case "awards-honors":
+        return (
+          <SimpleEntryForm
+            title="Awards & Honors"
+            entries={currentProfile.awardsAndHonors}
+            onChange={(awardsAndHonors) => setProfile({ ...currentProfile, awardsAndHonors })}
+            titleLabel="Award"
+            subtitleLabel="Issued By"
+            addLabel="Add Award"
+          />
+        );
+
+      case "conferences-presentations":
+        return (
+          <SimpleEntryForm
+            title="Conferences/Presentations"
+            entries={currentProfile.conferencesPresentations}
+            onChange={(conferencesPresentations) => setProfile({ ...currentProfile, conferencesPresentations })}
+            titleLabel="Talk/Presentation"
+            subtitleLabel="Conference/Event"
+          />
+        );
+
+      case "courses":
+        return (
+          <SimpleEntryForm
+            title="Courses"
+            entries={currentProfile.courses}
+            onChange={(courses) => setProfile({ ...currentProfile, courses })}
+            subtitleLabel="Provider/Institution"
+            addLabel="Add Course"
+            showDates={false}
+          />
+        );
+
+      case "patents":
+        return (
+          <SimpleEntryForm
+            title="Patents"
+            entries={currentProfile.patents}
+            onChange={(patents) => setProfile({ ...currentProfile, patents })}
+            subtitleLabel="Patent Number"
+            addLabel="Add Patent"
+          />
+        );
+
+      case "test-scores":
+        return (
+          <TestScoresForm entries={currentProfile.testScores} onChange={(testScores) => setProfile({ ...currentProfile, testScores })} />
+        );
+
+      case "references":
+        return (
+          <ReferencesForm entries={currentProfile.references} onChange={(references) => setProfile({ ...currentProfile, references })} />
+        );
+
+      default:
+        return null;
+    }
+  }
+
   return (
     <div className="app editor-with-preview">
-    <div className="editor-form-column">
-      <h1 className="page-title">Master Profile</h1>
-      <EditorToolbar
-        onPreview={() => setPreviewOpen(true)}
-        onAiReview={() => {
-          document.getElementById("resume-health")?.scrollIntoView({ behavior: "smooth", block: "start" });
-          if (aiModeEnabled) handleGetAiFeedback();
-        }}
-      />
-
-      <section className="form-section" id="import">
-        <h2>Import from Resume</h2>
-        <p className="status">
-          Best-effort, rule-based parsing of a .pdf or .docx resume — it will misparse some layouts. Nothing is
-          saved until you review the form below and click Save.
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.docx"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleImportFile(file);
+      <div className="editor-form-column">
+        <h1 className="page-title">Master Profile</h1>
+        <EditorToolbar
+          onPreview={() => setPreviewOpen(true)}
+          onAiReview={() => {
+            setActiveSectionId("resume-health");
+            if (aiModeEnabled) handleGetAiFeedback();
           }}
         />
-        {importStatus === "importing" && <p className="status">Parsing…</p>}
-        {importStatus === "imported" && (
-          <p className="status">
-            {importMethod === "llm" ? (
-              <span className="pill pill-ai">AI-parsed</span>
-            ) : (
-              <span className="pill pill-nice">Rule-based parse</span>
-            )}{" "}
-            — review and correct the fields below before saving.
-          </p>
-        )}
-        {importStatus === "error" && <p className="status">{importError}</p>}
-        {importStatus === "imported" && !aiModeEnabled && (
-          <p className="status">
-            Switch to AI Mode before importing to get an automatic strengths/weaknesses grade on the parsed resume.
-          </p>
-        )}
-      </section>
 
-      <section className="form-section" id="resume-health">
-        <h2>Resume Health</h2>
-        <p className="status">Rule-based checks, recomputed live as you edit — no AI involved.</p>
-        <div className="score-card-top">
-          <ScoreGauge score={scan.score} />
-          <div className="scan-summary">
-            <p>
-              {scan.suggestions.length === 0
-                ? "No suggestions — this profile looks solid."
-                : `${scan.suggestions.length} suggestion${scan.suggestions.length === 1 ? "" : "s"} to strengthen this resume.`}
-            </p>
-          </div>
+        {renderActiveSection()}
+
+        <div className="wizard-nav-bars">
+          {prevItem && (
+            <button type="button" className="wizard-nav-bar wizard-back-bar" onClick={() => setActiveSectionId(prevItem.id)}>
+              <span className="wizard-nav-arrow" aria-hidden="true">
+                ←
+              </span>
+              <span className="wizard-nav-text">
+                <span className="wizard-nav-caption">Back</span>
+                <span className="wizard-nav-title">
+                  {prevItem.icon} {prevItem.label}
+                </span>
+              </span>
+            </button>
+          )}
+          {nextItem ? (
+            <button type="button" className="wizard-nav-bar wizard-next-bar" onClick={() => setActiveSectionId(nextItem.id)}>
+              <span className="wizard-nav-text">
+                <span className="wizard-nav-caption">Next</span>
+                <span className="wizard-nav-title">
+                  {nextItem.icon} {nextItem.label}
+                </span>
+              </span>
+              <span className="wizard-nav-arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+          ) : (
+            <div className="wizard-finish-bar">
+              <span>🎉 That's every section.</span>
+              <button type="button" className="link-button" onClick={() => setActiveSectionId("resume-health")}>
+                Check your Resume Health
+              </button>
+              <span>or hit Save above.</span>
+            </div>
+          )}
         </div>
-        {scan.suggestions.length > 0 && (
-          <ul className="suggestion-list">
-            {scan.suggestions.map((s) => (
-              <li key={s.id} className="suggestion">
-                <span className={`suggestion-severity-dot suggestion-severity-dot-${s.severity}`} aria-hidden="true" />
-                <div className="suggestion-body">
-                  <span className="suggestion-message">{s.message}</span>
-                  <span className="pill pill-nice suggestion-category-pill">{targetLabel(s.targetType)}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="ai-action-cta">
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => handleGetAiFeedback()}
-            disabled={!aiModeEnabled || aiHealthStatus === "loading"}
-            title={aiModeEnabled ? undefined : "Switch to AI Mode in the header to use this"}
-          >
-            {aiHealthStatus === "loading" ? "Getting AI feedback…" : "Get AI writing feedback"}
-          </button>
-          {aiHealthStatus === "error" && <span className="status">AI feedback isn't available right now.</span>}
-        </div>
-
-        {aiHealthStatus === "loaded" && (
-          <div className="ai-suggestions">
-            <p className="status">
-              {aiHealthAutoTriggered
-                ? "Auto-graded right after import — "
-                : ""}
-              Qualitative feedback from an AI model — informational only, it never affects the score above.
-            </p>
-
-            {aiHealthStrengths.length > 0 && (
-              <>
-                <p className="ai-suggestions-subhead">Strengths</p>
-                <ul className="suggestion-list">
-                  {aiHealthStrengths.map((s, i) => (
-                    <li key={i} className="suggestion">
-                      <span className="suggestion-severity-dot suggestion-severity-dot-strength" aria-hidden="true" />
-                      <div className="suggestion-body">
-                        <span className="suggestion-message">{s}</span>
-                        <span className="pill pill-ai suggestion-category-pill">AI</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-
-            {aiHealthSuggestions.length > 0 && (
-              <>
-                <p className="ai-suggestions-subhead">Suggested improvements</p>
-                <ul className="suggestion-list">
-                  {aiHealthSuggestions.map((s) => (
-                    <li key={s.id} className="suggestion">
-                      <span className="suggestion-severity-dot suggestion-severity-dot-ai" aria-hidden="true" />
-                      <div className="suggestion-body">
-                        <span className="suggestion-message">{s.message}</span>
-                        <span className="pill pill-ai suggestion-category-pill">AI</span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-
-            {aiHealthStrengths.length === 0 && aiHealthSuggestions.length === 0 && (
-              <p className="status">No additional feedback — this profile reads well.</p>
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className="form-section" id="skill-validation">
-        <h2>Skill Validation</h2>
-        <p className="status">
-          Cross-references your listed skills against the rest of your resume — keyword presence only, not a
-          judgment of proficiency.
-        </p>
-        {skillValidation.findings.length === 0 ? (
-          <p className="status">No findings.</p>
-        ) : (
-          <ul className="suggestion-list">
-            {skillValidation.findings.map((f) => (
-              <li key={f.id} className="suggestion">
-                <span
-                  className={`suggestion-severity-dot suggestion-severity-dot-${
-                    f.type === "unsubstantiated" ? "medium" : "low"
-                  }`}
-                  aria-hidden="true"
-                />
-                <div className="suggestion-body">
-                  <span className="suggestion-message">{f.message}</span>
-                  <span className="pill pill-nice suggestion-category-pill">
-                    {f.type === "unsubstantiated" ? "Unsubstantiated" : "Not listed"}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <div id="contact-info">
-        <ContactForm contact={profile.contact} onChange={(contact) => setProfile({ ...profile, contact })} />
       </div>
-      <div id="summary">
-        <SummaryForm summary={profile.summary} onChange={(summary) => setProfile({ ...profile, summary })} />
-      </div>
-      <div id="work-experience">
-        <WorkExperienceForm
-          entries={profile.workExperience}
-          onChange={(workExperience) => setProfile({ ...profile, workExperience })}
-        />
-      </div>
-      <div id="projects">
-        <ProjectsForm entries={profile.projects} onChange={(projects) => setProfile({ ...profile, projects })} />
-      </div>
-      <div id="volunteer-work">
-        <VolunteerWorkForm
-          entries={profile.volunteerWork}
-          onChange={(volunteerWork) => setProfile({ ...profile, volunteerWork })}
-        />
-      </div>
-      <div id="skills">
-        <SkillsForm skills={profile.skills} onChange={(skills) => setProfile({ ...profile, skills })} />
-      </div>
-      <div id="education">
-        <EducationForm
-          entries={profile.education}
-          onChange={(education) => setProfile({ ...profile, education })}
-        />
-      </div>
-      <div id="certifications">
-        <CertificationsForm
-          entries={profile.certifications}
-          onChange={(certifications) => setProfile({ ...profile, certifications })}
-        />
-      </div>
-      <div id="research-experience">
-        <SimpleEntryForm
-          title="Research Experience"
-          entries={profile.researchExperience}
-          onChange={(researchExperience) => setProfile({ ...profile, researchExperience })}
-          subtitleLabel="Institution/Lab"
-        />
-      </div>
-      <div id="leadership">
-        <SimpleEntryForm
-          title="Leadership"
-          entries={profile.leadership}
-          onChange={(leadership) => setProfile({ ...profile, leadership })}
-        />
-      </div>
-      <div id="extra-curricular">
-        <SimpleEntryForm
-          title="Extra Curricular Activities"
-          entries={profile.extraCurricular}
-          onChange={(extraCurricular) => setProfile({ ...profile, extraCurricular })}
-          addLabel="Add Activity"
-        />
-      </div>
-      <div id="publications">
-        <BulletListSection
-          title="Publications"
-          helpText="One entry per publication -- title, authors, venue, however you'd cite it."
-          bullets={profile.publications}
-          onChange={(publications) => setProfile({ ...profile, publications })}
-        />
-      </div>
-      <div id="languages">
-        <TagListForm
-          title="Languages"
-          tags={profile.languages}
-          onChange={(languages) => setProfile({ ...profile, languages })}
-          placeholder="e.g. Spanish (fluent)"
-        />
-      </div>
-      <div id="associations">
-        <SimpleEntryForm
-          title="Associations"
-          entries={profile.associations}
-          onChange={(associations) => setProfile({ ...profile, associations })}
-          titleLabel="Role"
-          subtitleLabel="Organization"
-        />
-      </div>
-      <div id="hobbies-interests">
-        <TagListForm
-          title="Hobbies & Interests"
-          tags={profile.hobbiesAndInterests}
-          onChange={(hobbiesAndInterests) => setProfile({ ...profile, hobbiesAndInterests })}
-          placeholder="e.g. Rock climbing"
-        />
-      </div>
-      <div id="awards-honors">
-        <SimpleEntryForm
-          title="Awards & Honors"
-          entries={profile.awardsAndHonors}
-          onChange={(awardsAndHonors) => setProfile({ ...profile, awardsAndHonors })}
-          titleLabel="Award"
-          subtitleLabel="Issued By"
-          addLabel="Add Award"
-        />
-      </div>
-      <div id="conferences-presentations">
-        <SimpleEntryForm
-          title="Conferences/Presentations"
-          entries={profile.conferencesPresentations}
-          onChange={(conferencesPresentations) => setProfile({ ...profile, conferencesPresentations })}
-          titleLabel="Talk/Presentation"
-          subtitleLabel="Conference/Event"
-        />
-      </div>
-      <div id="publications-abstract">
-        <BulletListSection
-          title="Publications Abstract"
-          helpText="Short abstracts for the publications above, if you'd like to include them."
-          bullets={profile.publicationsAbstract}
-          onChange={(publicationsAbstract) => setProfile({ ...profile, publicationsAbstract })}
-        />
-      </div>
-      <div id="courses">
-        <SimpleEntryForm
-          title="Courses"
-          entries={profile.courses}
-          onChange={(courses) => setProfile({ ...profile, courses })}
-          subtitleLabel="Provider/Institution"
-          addLabel="Add Course"
-          showDates={false}
-        />
-      </div>
-      <div id="patents">
-        <SimpleEntryForm
-          title="Patents"
-          entries={profile.patents}
-          onChange={(patents) => setProfile({ ...profile, patents })}
-          subtitleLabel="Patent Number"
-          addLabel="Add Patent"
-        />
-      </div>
-      <div id="test-scores">
-        <TestScoresForm entries={profile.testScores} onChange={(testScores) => setProfile({ ...profile, testScores })} />
-      </div>
-      <div id="references">
-        <ReferencesForm entries={profile.references} onChange={(references) => setProfile({ ...profile, references })} />
-      </div>
-    </div>
 
       <aside className="editor-preview-column">
         <div className="template-picker">
@@ -533,7 +637,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         <div className="resume-preview-frame editor-preview-frame">
           <div className="editor-preview-scale-outer">
             <div className="editor-preview-scale-inner">
-              <PreviewTemplate resume={buildFullResume(profile)} />
+              <PreviewTemplate resume={buildFullResume(currentProfile)} />
             </div>
           </div>
         </div>
@@ -563,7 +667,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
               </button>
             </div>
             <div className="preview-overlay-body">
-              <PreviewTemplate resume={buildFullResume(profile)} />
+              <PreviewTemplate resume={buildFullResume(currentProfile)} />
             </div>
           </div>
         </div>

@@ -1381,3 +1381,100 @@ section.form-section h3 {
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
 }
+
+/* ---- Resume Builder wizard nav (one section per page) ---- */
+
+.wizard-nav-bars {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.wizard-nav-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.wizard-nav-bar:hover {
+  border-color: var(--primary-soft-line);
+  transform: translateY(-1px);
+}
+
+.wizard-back-bar {
+  flex: 0 1 auto;
+  min-width: 200px;
+}
+
+.wizard-next-bar {
+  justify-content: space-between;
+}
+
+.wizard-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wizard-back-bar .wizard-nav-text {
+  align-items: flex-start;
+}
+
+.wizard-next-bar .wizard-nav-text {
+  align-items: flex-start;
+}
+
+.wizard-nav-caption {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+
+.wizard-nav-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wizard-nav-arrow {
+  font-size: 1.2rem;
+  color: var(--primary);
+  flex: none;
+}
+
+.wizard-finish-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 16px 20px;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-soft-line);
+  border-radius: var(--radius-card);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: underline;
+}
