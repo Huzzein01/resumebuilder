@@ -2,48 +2,46 @@ import type { ReactNode } from "react";
 import { useShellSlots } from "./ShellContext.js";
 import AiModeToggle from "../components/AiModeToggle.js";
 import Logo from "../components/Logo.js";
-
-type Tab = "profile" | "jobDescription";
+import AccountMenu from "../components/AccountMenu.js";
 
 interface AppShellProps {
-  activeTab: Tab;
-  onTabChange: (tab: Tab) => void;
+  /** Called when the brand/logo is clicked -- returns to the Apps dashboard. */
+  onHome: () => void;
+  /** Optional close ("X") button shown in editor views, returning to the dashboard the same way clicking the brand does. */
+  showClose?: boolean;
   saveStatus?: ReactNode;
   children: ReactNode;
 }
 
 /**
- * Persistent app chrome: a top toolbar (brand, tab switcher, page-specific
- * promoted action) and a left sidebar (page-specific section nav), wrapping
- * a scrollable main content area. Replaces the old scroll-down-the-page
- * layout where every feature -- including the cover letter -- was buried
- * behind whatever came before it.
+ * Persistent app chrome: a top toolbar (brand, page-specific promoted
+ * action) and a left sidebar (page-specific nav -- either the global
+ * Apps/Templates/My Drive/Trash rail on dashboard pages, or a
+ * jump-to-section nav inside an editor, both via useSetSidebar), wrapping a
+ * scrollable main content area. Primary navigation lives in the sidebar
+ * (GlobalNav) rather than a top tab switcher, matching the left-rail
+ * structure of the app's reference design.
  */
-export default function AppShell({ activeTab, onTabChange, saveStatus, children }: AppShellProps) {
+export default function AppShell({ onHome, showClose, saveStatus, children }: AppShellProps) {
   const { sidebar, topBarExtra } = useShellSlots();
 
   return (
     <div className="shell">
       <header className="shell-topbar">
-        <div className="shell-brand">
+        <button className="shell-brand shell-brand-button" onClick={onHome} title="Back to Apps">
           <Logo />
           <span className="brand-name">Resume Tailor</span>
-        </div>
-        <nav className="shell-tabs" aria-label="Main">
-          <button className={activeTab === "profile" ? "active" : ""} onClick={() => onTabChange("profile")}>
-            Profile
-          </button>
-          <button
-            className={activeTab === "jobDescription" ? "active" : ""}
-            onClick={() => onTabChange("jobDescription")}
-          >
-            Tailor Resume
-          </button>
-        </nav>
+        </button>
         <div className="shell-topbar-extra">
           <AiModeToggle />
           {topBarExtra}
           {saveStatus}
+          <AccountMenu />
+          {showClose && (
+            <button className="shell-close" onClick={onHome} title="Close" aria-label="Close">
+              ✕
+            </button>
+          )}
         </div>
       </header>
       <div className="shell-body">

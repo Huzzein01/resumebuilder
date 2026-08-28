@@ -1,21 +1,60 @@
 import { useState } from "react";
 import ProfileEditor from "./pages/ProfileEditor.js";
 import JobDescriptionPage from "./pages/JobDescriptionPage.js";
+import AppsHome from "./pages/AppsHome.js";
+import TemplatesGallery from "./pages/TemplatesGallery.js";
+import MyDrive from "./pages/MyDrive.js";
+import SharedWithMe from "./pages/SharedWithMe.js";
+import TrashPage from "./pages/TrashPage.js";
+import MyProfilePage from "./pages/MyProfilePage.js";
+import SettingsPage from "./pages/SettingsPage.js";
+import CareerToolPage from "./pages/CareerToolPage.js";
 import AppShell from "./shell/AppShell.js";
 import { ShellProvider } from "./shell/ShellContext.js";
 import { AiModeProvider } from "./shell/AiModeContext.js";
+import { NavProvider, type AppView } from "./shell/NavContext.js";
 
-type Tab = "profile" | "jobDescription";
+function renderView(view: AppView) {
+  switch (view.page) {
+    case "apps":
+      return <AppsHome />;
+    case "templates":
+      return <TemplatesGallery />;
+    case "drive":
+      return <MyDrive />;
+    case "shared":
+      return <SharedWithMe />;
+    case "trash":
+      return <TrashPage />;
+    case "account-profile":
+      return <MyProfilePage />;
+    case "account-settings":
+      return <SettingsPage />;
+    case "editor-profile":
+      return <ProfileEditor />;
+    case "editor-jd":
+      return <JobDescriptionPage />;
+    case "career-tool":
+      return <CareerToolPage kind={view.kind} />;
+  }
+}
+
+/** Editor-style views get a "✕ Close" button back to the Apps dashboard, matching every other view's clickable-brand affordance but more discoverable while deep in an editor. */
+function isEditorView(view: AppView): boolean {
+  return view.page === "editor-profile" || view.page === "editor-jd" || view.page === "career-tool";
+}
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("profile");
+  const [view, setView] = useState<AppView>({ page: "apps" });
 
   return (
     <AiModeProvider>
       <ShellProvider>
-        <AppShell activeTab={tab} onTabChange={setTab}>
-          {tab === "profile" ? <ProfileEditor /> : <JobDescriptionPage />}
-        </AppShell>
+        <NavProvider navigate={setView}>
+          <AppShell onHome={() => setView({ page: "apps" })} showClose={isEditorView(view)}>
+            {renderView(view)}
+          </AppShell>
+        </NavProvider>
       </ShellProvider>
     </AiModeProvider>
   );

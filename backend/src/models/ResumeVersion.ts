@@ -68,13 +68,18 @@ const SelectionStateSchema = new Schema(
   { _id: false }
 );
 
-const ResumeVersionSchema = new Schema({
-  jobDescriptionId: { type: String, required: true },
-  templateName: { type: String, required: true },
-  profileSnapshot: { type: ProfileSnapshotSchema, required: true },
-  selection: { type: SelectionStateSchema, required: true },
-  overallScore: { type: Number, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
+const ResumeVersionSchema = new Schema(
+  {
+    jobDescriptionId: { type: String, required: true },
+    templateName: { type: String, required: true },
+    profileSnapshot: { type: ProfileSnapshotSchema, required: true },
+    selection: { type: SelectionStateSchema, required: true },
+    overallScore: { type: Number, required: true },
+    title: { type: String, default: "" },
+    isTrashed: { type: Boolean, default: false },
+    trashedAt: { type: Date },
+  },
+  { timestamps: true }
+);
 
 export const ResumeVersionModel = model("ResumeVersion", ResumeVersionSchema);

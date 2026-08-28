@@ -10,6 +10,7 @@ import relevanceRoutes from "./routes/relevanceRoutes.js";
 import selectionRoutes from "./routes/selectionRoutes.js";
 import resumeVersionRoutes from "./routes/resumeVersionRoutes.js";
 import coverLetterRoutes from "./routes/coverLetterRoutes.js";
+import careerToolsRoutes from "./routes/careerToolsRoutes.js";
 
 const app = express();
 
@@ -61,6 +62,7 @@ app.use("/api/relevance", relevanceRoutes);
 app.use("/api/selection", selectionRoutes);
 app.use("/api/resume-versions", resumeVersionRoutes);
 app.use("/api/resume-versions", coverLetterRoutes);
+app.use("/api/career-tools", careerToolsRoutes);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });

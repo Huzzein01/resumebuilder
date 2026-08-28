@@ -24,15 +24,20 @@ function toResumeVersion(doc: any): ResumeVersion {
     profileSnapshot: obj.profileSnapshot,
     selection: obj.selection,
     overallScore: obj.overallScore,
+    title: obj.title || "Untitled Resume",
+    isTrashed: obj.isTrashed ?? false,
+    trashedAt: obj.trashedAt ? obj.trashedAt.toISOString() : undefined,
     createdAt: obj.createdAt.toISOString(),
+    updatedAt: (obj.updatedAt ?? obj.createdAt).toISOString(),
   };
 }
 
 export async function createResumeVersion(req: Request, res: Response): Promise<void> {
-  const { jobDescriptionId, selection, templateName } = req.body as {
+  const { jobDescriptionId, selection, templateName, title } = req.body as {
     jobDescriptionId?: string;
     selection?: SelectionState;
     templateName?: string;
+    title?: string;
   };
   if (!jobDescriptionId || !selection) {
     res.status(400).json({ error: "jobDescriptionId and selection are required" });
@@ -51,15 +56,90 @@ export async function createResumeVersion(req: Request, res: Response): Promise<
   const requirements = jdDoc.toObject().requirements as ExtractedRequirements;
   const relevance = scoreProfile(profile, requirements);
 
+  const resolvedTitle =
+    title?.trim() || (requirements.title ? `${requirements.title} Resume` : "Untitled Resume");
+
   const doc = await ResumeVersionModel.create({
     jobDescriptionId,
     templateName: resolvedTemplateName,
     profileSnapshot: profile,
     selection,
     overallScore: relevance.overallScore,
+    title: resolvedTitle,
   });
 
   res.status(201).json(toResumeVersion(doc));
+}
+
+/** My Drive: every non-trashed resume version, most recently updated first. */
+export async function listResumeVersions(_req: Request, res: Response): Promise<void> {
+  const docs = await ResumeVersionModel.find({ isTrashed: { $ne: true } }).sort({ updatedAt: -1 });
+  res.json(docs.map(toResumeVersion));
+}
+
+/** Trash: every trashed resume version, most recently trashed first. */
+export async function listTrashedResumeVersions(_req: Request, res: Response): Promise<void> {
+  const docs = await ResumeVersionModel.find({ isTrashed: true }).sort({ trashedAt: -1 });
+  res.json(docs.map(toResumeVersion));
+}
+
+export async function renameResumeVersion(req: Request, res: Response): Promise<void> {
+  const { title } = req.body as { title?: string };
+  if (!title || !title.trim()) {
+    res.status(400).json({ error: "title is required" });
+    return;
+  }
+  const doc = await ResumeVersionModel.findByIdAndUpdate(
+    req.params.id,
+    { title: title.trim() },
+    { new: true }
+  );
+  if (!doc) {
+    res.status(404).json({ error: "Resume version not found" });
+    return;
+  }
+  res.json(toResumeVersion(doc));
+}
+
+export async function trashResumeVersion(req: Request, res: Response): Promise<void> {
+  const doc = await ResumeVersionModel.findByIdAndUpdate(
+    req.params.id,
+    { isTrashed: true, trashedAt: new Date() },
+    { new: true }
+  );
+  if (!doc) {
+    res.status(404).json({ error: "Resume version not found" });
+    return;
+  }
+  res.json(toResumeVersion(doc));
+}
+
+export async function restoreResumeVersion(req: Request, res: Response): Promise<void> {
+  const doc = await ResumeVersionModel.findByIdAndUpdate(
+    req.params.id,
+    { isTrashed: false, trashedAt: undefined },
+    { new: true }
+  );
+  if (!doc) {
+    res.status(404).json({ error: "Resume version not found" });
+    return;
+  }
+  res.json(toResumeVersion(doc));
+}
+
+/** Permanent delete -- only from the trash, so nothing can be destroyed without the trash step first. */
+export async function deleteResumeVersion(req: Request, res: Response): Promise<void> {
+  const doc = await ResumeVersionModel.findById(req.params.id);
+  if (!doc) {
+    res.status(404).json({ error: "Resume version not found" });
+    return;
+  }
+  if (!doc.get("isTrashed")) {
+    res.status(400).json({ error: "Move to trash before permanently deleting." });
+    return;
+  }
+  await doc.deleteOne();
+  res.status(204).send();
 }
 
 export async function getResumeVersion(req: Request, res: Response): Promise<void> {

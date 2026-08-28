@@ -21,6 +21,45 @@ export async function fetchResumeVersion(id: string): Promise<ResumeVersion> {
   return res.json();
 }
 
+export async function listResumeVersions(): Promise<ResumeVersion[]> {
+  const res = await fetch(`${API_BASE_URL}/resume-versions`);
+  if (!res.ok) throw new Error(`Failed to list resume versions: ${res.status}`);
+  return res.json();
+}
+
+export async function listTrashedResumeVersions(): Promise<ResumeVersion[]> {
+  const res = await fetch(`${API_BASE_URL}/resume-versions/trash`);
+  if (!res.ok) throw new Error(`Failed to list trashed resume versions: ${res.status}`);
+  return res.json();
+}
+
+export async function renameResumeVersion(id: string, title: string): Promise<ResumeVersion> {
+  const res = await fetch(`${API_BASE_URL}/resume-versions/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  if (!res.ok) throw new Error(`Failed to rename resume version: ${res.status}`);
+  return res.json();
+}
+
+export async function trashResumeVersion(id: string): Promise<ResumeVersion> {
+  const res = await fetch(`${API_BASE_URL}/resume-versions/${id}/trash`, { method: "POST" });
+  if (!res.ok) throw new Error(`Failed to move resume version to trash: ${res.status}`);
+  return res.json();
+}
+
+export async function restoreResumeVersion(id: string): Promise<ResumeVersion> {
+  const res = await fetch(`${API_BASE_URL}/resume-versions/${id}/restore`, { method: "POST" });
+  if (!res.ok) throw new Error(`Failed to restore resume version: ${res.status}`);
+  return res.json();
+}
+
+export async function deleteResumeVersion(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/resume-versions/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`Failed to permanently delete resume version: ${res.status}`);
+}
+
 export interface CoverLetterOptions {
   companyName?: string;
   hiringManagerName?: string;

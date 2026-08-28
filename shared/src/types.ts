@@ -291,7 +291,11 @@ export interface ResumeVersion {
   profileSnapshot: Profile;
   selection: SelectionState;
   overallScore: number;
+  title: string;
+  isTrashed: boolean;
+  trashedAt?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export type ScanSeverity = "high" | "medium" | "low";
@@ -351,6 +355,33 @@ export interface AiResumeSuggestion {
 
 export interface ResumeHealthAiResult {
   suggestions: AiResumeSuggestion[];
+  method: "llm" | "unavailable";
+  provider?: string;
+}
+
+/**
+ * The five AI-only career tools on the Apps dashboard (Interview Question
+ * Generator, Career Path, Career Financials, LinkedIn Optimization, Letter
+ * Review) -- unlike resume health/cover letter/JD extraction, none of these
+ * have a deterministic rule-based equivalent, so there's nothing to fall
+ * back to. They share one result shape (a labeled list of insights) and one
+ * backend module instead of five near-identical ones.
+ */
+export type CareerToolKind =
+  | "interview-questions"
+  | "career-path"
+  | "career-financials"
+  | "linkedin-optimization"
+  | "letter-review";
+
+export interface CareerToolInsight {
+  id: string;
+  message: string;
+}
+
+export interface CareerToolResult {
+  kind: CareerToolKind;
+  insights: CareerToolInsight[];
   method: "llm" | "unavailable";
   provider?: string;
 }
