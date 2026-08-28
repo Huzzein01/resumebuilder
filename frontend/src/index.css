@@ -1070,6 +1070,15 @@ section.form-section h3 {
   border-radius: var(--radius-card);
 }
 
+.drive-row-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.drive-row-clickable:hover {
+  border-color: var(--primary-soft-line);
+}
+
 .drive-row-main {
   display: flex;
   flex-direction: column;
@@ -1079,7 +1088,21 @@ section.form-section h3 {
 
 .drive-row-title {
   font-weight: 600;
-  cursor: text;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drive-row-rename {
+  font-size: 0.8rem;
+  color: var(--faint);
+  background: transparent;
+  border: none;
+  padding: 2px;
+}
+
+.drive-row-rename:hover {
+  color: var(--ink);
 }
 
 .drive-row-meta {

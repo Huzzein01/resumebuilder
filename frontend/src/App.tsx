@@ -31,7 +31,11 @@ function renderView(view: AppView) {
     case "account-settings":
       return <SettingsPage />;
     case "editor-profile":
-      return <ProfileEditor />;
+      // Keyed on the requested template so opening a different My Drive
+      // resume (a different initialTemplateId) remounts with the new
+      // starting template instead of reusing whatever the last-open
+      // editor instance already settled on.
+      return <ProfileEditor key={view.initialTemplateId ?? "default"} initialTemplateId={view.initialTemplateId} />;
     case "editor-jd":
       return <JobDescriptionPage />;
     case "career-tool":

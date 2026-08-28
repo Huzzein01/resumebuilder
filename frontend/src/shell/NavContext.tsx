@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
-import type { CareerToolKind } from "@resumebuilder/shared";
+import type { CareerToolKind, ResumeTemplateId } from "@resumebuilder/shared";
 
 export type AppView =
   | { page: "apps" }
@@ -9,7 +9,8 @@ export type AppView =
   | { page: "trash" }
   | { page: "account-profile" }
   | { page: "account-settings" }
-  | { page: "editor-profile" }
+  /** `initialTemplateId` pre-selects a template -- e.g. opening a My Drive resume in the editor starts on the template it was saved with. */
+  | { page: "editor-profile"; initialTemplateId?: ResumeTemplateId }
   | { page: "editor-jd"; resumeVersionId?: string }
   | { page: "career-tool"; kind: CareerToolKind };
 

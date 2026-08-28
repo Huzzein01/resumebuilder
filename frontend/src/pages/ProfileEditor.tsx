@@ -82,7 +82,11 @@ const SECTION_ITEMS = [
   { id: "references", label: "References", icon: "👥", group: "Profile" },
 ] as const;
 
-export default function ProfileEditor() {
+interface ProfileEditorProps {
+  initialTemplateId?: ResumeTemplateId;
+}
+
+export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
@@ -92,7 +96,7 @@ export default function ProfileEditor() {
   const [aiHealthStrengths, setAiHealthStrengths] = useState<string[]>([]);
   const [aiHealthSuggestions, setAiHealthSuggestions] = useState<AiResumeSuggestion[]>([]);
   const [aiHealthAutoTriggered, setAiHealthAutoTriggered] = useState(false);
-  const [templateId, setTemplateId] = useState<ResumeTemplateId>(DEFAULT_RESUME_TEMPLATE_ID);
+  const [templateId, setTemplateId] = useState<ResumeTemplateId>(initialTemplateId ?? DEFAULT_RESUME_TEMPLATE_ID);
   const [hoveredTemplateId, setHoveredTemplateId] = useState<ResumeTemplateId | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

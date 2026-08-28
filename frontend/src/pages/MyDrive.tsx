@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ResumeVersion } from "@resumebuilder/shared";
+import { isResumeTemplateId, DEFAULT_RESUME_TEMPLATE_ID, type ResumeVersion } from "@resumebuilder/shared";
 import { listResumeVersions, renameResumeVersion, trashResumeVersion } from "../api/resumeVersionApi.js";
 import { API_BASE_URL } from "../api/config.js";
 import GlobalNav from "../components/GlobalNav.js";
 import { useSetSidebar } from "../shell/ShellContext.js";
+import { useNav } from "../shell/NavContext.js";
 
 type Status = "loading" | "ready" | "error";
 
@@ -24,6 +25,7 @@ export default function MyDrive() {
   const [status, setStatus] = useState<Status>("loading");
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const { navigate } = useNav();
 
   const sidebarNode = useMemo(() => <GlobalNav active="drive" />, []);
   useSetSidebar(sidebarNode);
@@ -60,10 +62,26 @@ export default function MyDrive() {
     setRenamingId(null);
   }
 
+  /**
+   * This app edits one master profile rather than per-version documents, so
+   * "opening" a saved resume means: go to the Resume Builder, pre-selected
+   * to the template that version was saved with, ready to keep editing the
+   * underlying profile data. Modifying it there updates the master profile
+   * (and therefore every version), the same relationship every other
+   * export in this app already has.
+   */
+  function openResume(version: ResumeVersion) {
+    const templateId = isResumeTemplateId(version.templateName) ? version.templateName : DEFAULT_RESUME_TEMPLATE_ID;
+    navigate({ page: "editor-profile", initialTemplateId: templateId });
+  }
+
   return (
     <div className="app">
       <h1 className="page-title">My Drive</h1>
-      <p className="status">Every resume version you've generated -- rename, export, share, or move to trash.</p>
+      <p className="status">
+        Every resume version you've generated -- click one to open it in the Resume Builder, or rename, export,
+        share, and trash from here.
+      </p>
 
       {status === "loading" && <p className="status">Loading…</p>}
       {status === "error" && <p className="status">Failed to load your drive.</p>}
@@ -76,26 +94,39 @@ export default function MyDrive() {
       {status === "ready" && versions.length > 0 && (
         <div className="drive-list">
           {versions.map((v) => (
-            <div className="drive-row" key={v.id}>
+            <div className="drive-row drive-row-clickable" key={v.id} onClick={() => openResume(v)}>
               <div className="drive-row-main">
                 {renamingId === v.id ? (
                   <input
                     autoFocus
                     value={renameValue}
+                    onClick={(e) => e.stopPropagation()}
                     onChange={(e) => setRenameValue(e.target.value)}
                     onBlur={() => commitRename(v.id)}
                     onKeyDown={(e) => e.key === "Enter" && commitRename(v.id)}
                   />
                 ) : (
-                  <span className="drive-row-title" onClick={() => startRename(v)}>
+                  <span className="drive-row-title">
                     {v.title}
+                    <button
+                      type="button"
+                      className="drive-row-rename"
+                      title="Rename"
+                      aria-label="Rename"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startRename(v);
+                      }}
+                    >
+                      ✎
+                    </button>
                   </span>
                 )}
                 <span className="drive-row-meta">
                   Score {v.overallScore} · Updated {new Date(v.updatedAt).toLocaleDateString()}
                 </span>
               </div>
-              <div className="drive-row-actions">
+              <div className="drive-row-actions" onClick={(e) => e.stopPropagation()}>
                 <a className="secondary" href={`${API_BASE_URL}/resume-versions/${v.id}/pdf`} target="_blank" rel="noreferrer">
                   PDF
                 </a>
