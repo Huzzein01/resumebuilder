@@ -146,6 +146,22 @@ export function toProfileDraft(parsed: LlmProfileDraft): ProfileDraft {
     skills,
     education,
     certifications,
+    // Not part of the LLM resume-import schema yet -- same as the
+    // deterministic parser, the user fills these in directly.
+    researchExperience: [],
+    leadership: [],
+    extraCurricular: [],
+    associations: [],
+    awardsAndHonors: [],
+    conferencesPresentations: [],
+    courses: [],
+    patents: [],
+    publications: [],
+    publicationsAbstract: [],
+    languages: [],
+    hobbiesAndInterests: [],
+    testScores: [],
+    references: [],
   };
 }
 

@@ -54,5 +54,23 @@ export function buildTailoredResume(profile: Profile, selection: SelectionState)
     skills,
     education: profile.education,
     certifications: profile.certifications,
+    // These sections don't currently participate in JD-based selection --
+    // same as education/certifications above, they pass through unfiltered
+    // from the master profile.
+    volunteerWork: profile.volunteerWork,
+    researchExperience: profile.researchExperience,
+    leadership: profile.leadership,
+    extraCurricular: profile.extraCurricular,
+    associations: profile.associations,
+    awardsAndHonors: profile.awardsAndHonors,
+    conferencesPresentations: profile.conferencesPresentations,
+    courses: profile.courses,
+    patents: profile.patents,
+    publications: profile.publications,
+    publicationsAbstract: profile.publicationsAbstract,
+    languages: profile.languages,
+    hobbiesAndInterests: profile.hobbiesAndInterests,
+    testScores: profile.testScores,
+    references: profile.references,
   };
 }

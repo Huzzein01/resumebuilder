@@ -65,11 +65,57 @@ export async function getResumeHealthAi(req: Request, res: Response): Promise<vo
 }
 
 export async function updateProfile(req: Request, res: Response): Promise<void> {
-  const { contact, summary, workExperience, projects, volunteerWork, skills, education, certifications } = req.body;
+  const {
+    contact,
+    summary,
+    workExperience,
+    projects,
+    volunteerWork,
+    skills,
+    education,
+    certifications,
+    researchExperience,
+    leadership,
+    extraCurricular,
+    associations,
+    awardsAndHonors,
+    conferencesPresentations,
+    courses,
+    patents,
+    publications,
+    publicationsAbstract,
+    languages,
+    hobbiesAndInterests,
+    testScores,
+    references,
+  } = req.body;
 
   const doc = await ProfileModel.findOneAndUpdate(
     { slug: DEFAULT_SLUG },
-    { contact, summary, workExperience, projects, volunteerWork, skills, education, certifications },
+    {
+      contact,
+      summary,
+      workExperience,
+      projects,
+      volunteerWork,
+      skills,
+      education,
+      certifications,
+      researchExperience,
+      leadership,
+      extraCurricular,
+      associations,
+      awardsAndHonors,
+      conferencesPresentations,
+      courses,
+      patents,
+      publications,
+      publicationsAbstract,
+      languages,
+      hobbiesAndInterests,
+      testScores,
+      references,
+    },
     { new: true, upsert: true, runValidators: true }
   );
 

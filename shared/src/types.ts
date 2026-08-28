@@ -66,6 +66,37 @@ export interface VolunteerWork {
   bullets: Bullet[];
 }
 
+/**
+ * Shared shape for the several profile sections that are all "a title, an
+ * optional org/subtitle, an optional date range, and some bullet points" --
+ * Research Experience, Leadership, Extra Curricular Activities,
+ * Associations, Awards & Honors, Conferences/Presentations, Courses, and
+ * Patents. One type instead of eight near-identical ones.
+ */
+export interface SimpleEntry {
+  id: string;
+  title: string;
+  subtitle?: string;
+  startDate?: string;
+  endDate?: string;
+  bullets: Bullet[];
+}
+
+export interface TestScore {
+  id: string;
+  name: string;
+  score: string;
+  date?: string;
+}
+
+export interface ReferenceEntry {
+  id: string;
+  name: string;
+  relationship: string;
+  email?: string;
+  phone?: string;
+}
+
 export interface Profile {
   id: string;
   contact: ContactInfo;
@@ -76,6 +107,20 @@ export interface Profile {
   skills: Skill[];
   education: Education[];
   certifications: Certification[];
+  researchExperience: SimpleEntry[];
+  leadership: SimpleEntry[];
+  extraCurricular: SimpleEntry[];
+  associations: SimpleEntry[];
+  awardsAndHonors: SimpleEntry[];
+  conferencesPresentations: SimpleEntry[];
+  courses: SimpleEntry[];
+  patents: SimpleEntry[];
+  publications: Bullet[];
+  publicationsAbstract: Bullet[];
+  languages: string[];
+  hobbiesAndInterests: string[];
+  testScores: TestScore[];
+  references: ReferenceEntry[];
 }
 
 export type ProfileDraft = Omit<Profile, "id">;
@@ -222,6 +267,21 @@ export interface TailoredResume {
   skills: Skill[];
   education: Education[];
   certifications: Certification[];
+  volunteerWork: VolunteerWork[];
+  researchExperience: SimpleEntry[];
+  leadership: SimpleEntry[];
+  extraCurricular: SimpleEntry[];
+  associations: SimpleEntry[];
+  awardsAndHonors: SimpleEntry[];
+  conferencesPresentations: SimpleEntry[];
+  courses: SimpleEntry[];
+  patents: SimpleEntry[];
+  publications: Bullet[];
+  publicationsAbstract: Bullet[];
+  languages: string[];
+  hobbiesAndInterests: string[];
+  testScores: TestScore[];
+  references: ReferenceEntry[];
 }
 
 export interface ResumeVersion {

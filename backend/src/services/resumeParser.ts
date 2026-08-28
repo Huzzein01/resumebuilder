@@ -250,5 +250,23 @@ export function parseResumeText(rawText: string): ProfileDraft {
     skills: buildSkills(sections.get("skills") ?? []),
     education: buildEducation(splitIntoEntries(sections.get("education") ?? [])),
     certifications: buildCertifications(sections.get("certifications") ?? []),
+    // Not attempted by the deterministic parser -- these sections are rare
+    // enough in free-text resumes, and varied enough in format, that a
+    // rule-based pass isn't worth it; the user fills them in directly, or
+    // the LLM import path (schemas.ts) picks some of them up.
+    researchExperience: [],
+    leadership: [],
+    extraCurricular: [],
+    associations: [],
+    awardsAndHonors: [],
+    conferencesPresentations: [],
+    courses: [],
+    patents: [],
+    publications: [],
+    publicationsAbstract: [],
+    languages: [],
+    hobbiesAndInterests: [],
+    testScores: [],
+    references: [],
   };
 }

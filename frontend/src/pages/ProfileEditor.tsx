@@ -16,6 +16,11 @@ import VolunteerWorkForm from "../components/VolunteerWorkForm.js";
 import SkillsForm from "../components/SkillsForm.js";
 import EducationForm from "../components/EducationForm.js";
 import CertificationsForm from "../components/CertificationsForm.js";
+import SimpleEntryForm from "../components/SimpleEntryForm.js";
+import TagListForm from "../components/TagListForm.js";
+import BulletListSection from "../components/BulletListSection.js";
+import TestScoresForm from "../components/TestScoresForm.js";
+import ReferencesForm from "../components/ReferencesForm.js";
 import ScoreGauge from "../components/ScoreGauge.js";
 import SectionNav from "../components/SectionNav.js";
 import EditorToolbar from "../components/EditorToolbar.js";
@@ -56,6 +61,20 @@ const SECTION_ITEMS = [
   { id: "skills", label: "Skills", icon: "✨", group: "Profile" },
   { id: "education", label: "Education", icon: "🎓", group: "Profile" },
   { id: "certifications", label: "Certifications", icon: "🏅", group: "Profile" },
+  { id: "research-experience", label: "Research Experience", icon: "🔬", group: "Profile" },
+  { id: "leadership", label: "Leadership", icon: "🚀", group: "Profile" },
+  { id: "extra-curricular", label: "Extra Curricular Activities", icon: "🎯", group: "Profile" },
+  { id: "publications", label: "Publications", icon: "📖", group: "Profile" },
+  { id: "publications-abstract", label: "Publications Abstract", icon: "📄", group: "Profile" },
+  { id: "languages", label: "Languages", icon: "🌐", group: "Profile" },
+  { id: "associations", label: "Associations", icon: "🏛️", group: "Profile" },
+  { id: "hobbies-interests", label: "Hobbies & Interests", icon: "🎨", group: "Profile" },
+  { id: "awards-honors", label: "Awards & Honors", icon: "🏆", group: "Profile" },
+  { id: "conferences-presentations", label: "Conferences/Presentations", icon: "🎤", group: "Profile" },
+  { id: "courses", label: "Courses", icon: "📚", group: "Profile" },
+  { id: "patents", label: "Patents", icon: "💡", group: "Profile" },
+  { id: "test-scores", label: "Test Scores", icon: "📊", group: "Profile" },
+  { id: "references", label: "References", icon: "👥", group: "Profile" },
 ] as const;
 
 export default function ProfileEditor() {
@@ -318,6 +337,114 @@ export default function ProfileEditor() {
           entries={profile.certifications}
           onChange={(certifications) => setProfile({ ...profile, certifications })}
         />
+      </div>
+      <div id="research-experience">
+        <SimpleEntryForm
+          title="Research Experience"
+          entries={profile.researchExperience}
+          onChange={(researchExperience) => setProfile({ ...profile, researchExperience })}
+          subtitleLabel="Institution/Lab"
+        />
+      </div>
+      <div id="leadership">
+        <SimpleEntryForm
+          title="Leadership"
+          entries={profile.leadership}
+          onChange={(leadership) => setProfile({ ...profile, leadership })}
+        />
+      </div>
+      <div id="extra-curricular">
+        <SimpleEntryForm
+          title="Extra Curricular Activities"
+          entries={profile.extraCurricular}
+          onChange={(extraCurricular) => setProfile({ ...profile, extraCurricular })}
+          addLabel="Add Activity"
+        />
+      </div>
+      <div id="publications">
+        <BulletListSection
+          title="Publications"
+          helpText="One entry per publication -- title, authors, venue, however you'd cite it."
+          bullets={profile.publications}
+          onChange={(publications) => setProfile({ ...profile, publications })}
+        />
+      </div>
+      <div id="languages">
+        <TagListForm
+          title="Languages"
+          tags={profile.languages}
+          onChange={(languages) => setProfile({ ...profile, languages })}
+          placeholder="e.g. Spanish (fluent)"
+        />
+      </div>
+      <div id="associations">
+        <SimpleEntryForm
+          title="Associations"
+          entries={profile.associations}
+          onChange={(associations) => setProfile({ ...profile, associations })}
+          titleLabel="Role"
+          subtitleLabel="Organization"
+        />
+      </div>
+      <div id="hobbies-interests">
+        <TagListForm
+          title="Hobbies & Interests"
+          tags={profile.hobbiesAndInterests}
+          onChange={(hobbiesAndInterests) => setProfile({ ...profile, hobbiesAndInterests })}
+          placeholder="e.g. Rock climbing"
+        />
+      </div>
+      <div id="awards-honors">
+        <SimpleEntryForm
+          title="Awards & Honors"
+          entries={profile.awardsAndHonors}
+          onChange={(awardsAndHonors) => setProfile({ ...profile, awardsAndHonors })}
+          titleLabel="Award"
+          subtitleLabel="Issued By"
+          addLabel="Add Award"
+        />
+      </div>
+      <div id="conferences-presentations">
+        <SimpleEntryForm
+          title="Conferences/Presentations"
+          entries={profile.conferencesPresentations}
+          onChange={(conferencesPresentations) => setProfile({ ...profile, conferencesPresentations })}
+          titleLabel="Talk/Presentation"
+          subtitleLabel="Conference/Event"
+        />
+      </div>
+      <div id="publications-abstract">
+        <BulletListSection
+          title="Publications Abstract"
+          helpText="Short abstracts for the publications above, if you'd like to include them."
+          bullets={profile.publicationsAbstract}
+          onChange={(publicationsAbstract) => setProfile({ ...profile, publicationsAbstract })}
+        />
+      </div>
+      <div id="courses">
+        <SimpleEntryForm
+          title="Courses"
+          entries={profile.courses}
+          onChange={(courses) => setProfile({ ...profile, courses })}
+          subtitleLabel="Provider/Institution"
+          addLabel="Add Course"
+          showDates={false}
+        />
+      </div>
+      <div id="patents">
+        <SimpleEntryForm
+          title="Patents"
+          entries={profile.patents}
+          onChange={(patents) => setProfile({ ...profile, patents })}
+          subtitleLabel="Patent Number"
+          addLabel="Add Patent"
+        />
+      </div>
+      <div id="test-scores">
+        <TestScoresForm entries={profile.testScores} onChange={(testScores) => setProfile({ ...profile, testScores })} />
+      </div>
+      <div id="references">
+        <ReferencesForm entries={profile.references} onChange={(references) => setProfile({ ...profile, references })} />
       </div>
     </div>
   );

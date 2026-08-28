@@ -7,6 +7,10 @@ import {
   SkillSchema,
   EducationSchema,
   CertificationSchema,
+  SimpleEntrySchema,
+  TestScoreSchema,
+  ReferenceEntrySchema,
+  BulletSchema,
 } from "./Profile.js";
 
 const ProfileSnapshotSchema = new Schema(
@@ -19,6 +23,20 @@ const ProfileSnapshotSchema = new Schema(
     skills: { type: [SkillSchema], default: [] },
     education: { type: [EducationSchema], default: [] },
     certifications: { type: [CertificationSchema], default: [] },
+    researchExperience: { type: [SimpleEntrySchema], default: [] },
+    leadership: { type: [SimpleEntrySchema], default: [] },
+    extraCurricular: { type: [SimpleEntrySchema], default: [] },
+    associations: { type: [SimpleEntrySchema], default: [] },
+    awardsAndHonors: { type: [SimpleEntrySchema], default: [] },
+    conferencesPresentations: { type: [SimpleEntrySchema], default: [] },
+    courses: { type: [SimpleEntrySchema], default: [] },
+    patents: { type: [SimpleEntrySchema], default: [] },
+    publications: { type: [BulletSchema], default: [] },
+    publicationsAbstract: { type: [BulletSchema], default: [] },
+    languages: { type: [String], default: [] },
+    hobbiesAndInterests: { type: [String], default: [] },
+    testScores: { type: [TestScoreSchema], default: [] },
+    references: { type: [ReferenceEntrySchema], default: [] },
   },
   { _id: false }
 );

@@ -13,6 +13,20 @@ function emptyProfile(): Profile {
     skills: [],
     education: [],
     certifications: [],
+    researchExperience: [],
+    leadership: [],
+    extraCurricular: [],
+    associations: [],
+    awardsAndHonors: [],
+    conferencesPresentations: [],
+    courses: [],
+    patents: [],
+    publications: [],
+    publicationsAbstract: [],
+    languages: [],
+    hobbiesAndInterests: [],
+    testScores: [],
+    references: [],
   };
 }
 

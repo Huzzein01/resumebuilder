@@ -1,4 +1,4 @@
-import type { TailoredResume } from "@resumebuilder/shared";
+import type { TailoredResume, SimpleEntry } from "@resumebuilder/shared";
 import RichText from "../components/RichText.js";
 import "./modernSidebarResume.css";
 
@@ -10,6 +10,17 @@ function dateRange(startDate?: string, endDate?: string): string | null {
   if (!startDate && !endDate) return null;
   return `${startDate ?? ""} – ${endDate || "Present"}`;
 }
+
+const SIMPLE_ENTRY_SECTIONS: { key: keyof TailoredResume; title: string }[] = [
+  { key: "researchExperience", title: "Research Experience" },
+  { key: "leadership", title: "Leadership" },
+  { key: "extraCurricular", title: "Extra Curricular Activities" },
+  { key: "associations", title: "Associations" },
+  { key: "awardsAndHonors", title: "Awards & Honors" },
+  { key: "conferencesPresentations", title: "Conferences/Presentations" },
+  { key: "courses", title: "Courses" },
+  { key: "patents", title: "Patents" },
+];
 
 export default function ModernSidebarResume({ resume }: Props) {
   const { contact, summary, skills, workExperience, projects, education, certifications } = resume;
@@ -65,6 +76,31 @@ export default function ModernSidebarResume({ resume }: Props) {
             {certifications.map((cert) => (
               <div className="ms-sidebar-line" key={cert.id}>
                 {cert.name} — {cert.issuer}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {resume.languages.length > 0 && (
+          <div className="ms-sidebar-section">
+            <div className="ms-sidebar-title">Languages</div>
+            <div className="ms-sidebar-line">{resume.languages.join(", ")}</div>
+          </div>
+        )}
+
+        {resume.hobbiesAndInterests.length > 0 && (
+          <div className="ms-sidebar-section">
+            <div className="ms-sidebar-title">Hobbies & Interests</div>
+            <div className="ms-sidebar-line">{resume.hobbiesAndInterests.join(", ")}</div>
+          </div>
+        )}
+
+        {resume.testScores.length > 0 && (
+          <div className="ms-sidebar-section">
+            <div className="ms-sidebar-title">Test Scores</div>
+            {resume.testScores.map((score) => (
+              <div className="ms-sidebar-line" key={score.id}>
+                {score.name}: {score.score}
               </div>
             ))}
           </div>
@@ -129,6 +165,104 @@ export default function ModernSidebarResume({ resume }: Props) {
                 )}
               </div>
             ))}
+          </section>
+        )}
+
+        {resume.volunteerWork.length > 0 && (
+          <section className="ms-section">
+            <div className="ms-section-title">Volunteer Work</div>
+            {resume.volunteerWork.map((entry) => (
+              <div className="ms-entry" key={entry.id}>
+                <div className="ms-entry-header">
+                  <span className="ms-entry-title">
+                    {entry.role} <span className="ms-entry-company">· {entry.organization}</span>
+                  </span>
+                  <span className="ms-entry-dates">{dateRange(entry.startDate, entry.endDate)}</span>
+                </div>
+                {entry.bullets.length > 0 && (
+                  <ul className="ms-bullet-list">
+                    {entry.bullets.map((b) => (
+                      <li className="ms-bullet" key={b.id}>
+                        <RichText text={b.text} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </section>
+        )}
+
+        {SIMPLE_ENTRY_SECTIONS.map(({ key, title }) => {
+          const entries = resume[key] as SimpleEntry[];
+          if (entries.length === 0) return null;
+          return (
+            <section className="ms-section" key={key}>
+              <div className="ms-section-title">{title}</div>
+              {entries.map((entry) => (
+                <div className="ms-entry" key={entry.id}>
+                  <div className="ms-entry-header">
+                    <span className="ms-entry-title">
+                      {entry.title}
+                      {entry.subtitle && <span className="ms-entry-company"> · {entry.subtitle}</span>}
+                    </span>
+                    <span className="ms-entry-dates">{dateRange(entry.startDate, entry.endDate)}</span>
+                  </div>
+                  {entry.bullets.length > 0 && (
+                    <ul className="ms-bullet-list">
+                      {entry.bullets.map((b) => (
+                        <li className="ms-bullet" key={b.id}>
+                          <RichText text={b.text} />
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </section>
+          );
+        })}
+
+        {resume.publications.length > 0 && (
+          <section className="ms-section">
+            <div className="ms-section-title">Publications</div>
+            <ol className="ms-numbered-list">
+              {resume.publications.map((item) => (
+                <li key={item.id}>
+                  <RichText text={item.text} />
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {resume.publicationsAbstract.length > 0 && (
+          <section className="ms-section">
+            <div className="ms-section-title">Publications Abstract</div>
+            <ol className="ms-numbered-list">
+              {resume.publicationsAbstract.map((item) => (
+                <li key={item.id}>
+                  <RichText text={item.text} />
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        {resume.references.length > 0 && (
+          <section className="ms-section">
+            <div className="ms-section-title">References</div>
+            <ul className="ms-bullet-list">
+              {resume.references.map((ref) => (
+                <li className="ms-bullet" key={ref.id}>
+                  {ref.name}
+                  {ref.relationship ? ` — ${ref.relationship}` : ""}
+                  {[ref.email, ref.phone].filter(Boolean).length > 0
+                    ? ` (${[ref.email, ref.phone].filter(Boolean).join(" | ")})`
+                    : ""}
+                </li>
+              ))}
+            </ul>
           </section>
         )}
       </main>
