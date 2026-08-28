@@ -39,7 +39,10 @@ export async function getCareerToolInsights(req: Request, res: Response): Promis
 
   const doc = await getOrCreateDefaultProfileDoc();
   const profile = toProfile(doc);
-  const targetRole = typeof req.query.targetRole === "string" ? req.query.targetRole : undefined;
+  const body = req.body as { targetRole?: string; jobDescription?: string; companyName?: string };
+  const targetRole = typeof body.targetRole === "string" ? body.targetRole : undefined;
+  const jobDescription = typeof body.jobDescription === "string" ? body.jobDescription : undefined;
+  const companyName = typeof body.companyName === "string" ? body.companyName : undefined;
 
   try {
     const { insights, providerName } = await generateCareerToolInsights({
@@ -48,6 +51,8 @@ export async function getCareerToolInsights(req: Request, res: Response): Promis
       skills: profile.skills.map((s) => s.name),
       recentTitles: profile.workExperience.map((w) => w.title),
       targetRole,
+      jobDescription,
+      companyName,
     });
     const result: CareerToolResult = { kind, insights, method: "llm", provider: providerName };
     res.json(result);
