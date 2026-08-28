@@ -93,6 +93,8 @@ export default function ProfileEditor() {
   const [aiHealthSuggestions, setAiHealthSuggestions] = useState<AiResumeSuggestion[]>([]);
   const [aiHealthAutoTriggered, setAiHealthAutoTriggered] = useState(false);
   const [templateId, setTemplateId] = useState<ResumeTemplateId>(DEFAULT_RESUME_TEMPLATE_ID);
+  const [hoveredTemplateId, setHoveredTemplateId] = useState<ResumeTemplateId | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { enabled: aiModeEnabled } = useAiMode();
 
@@ -193,13 +195,20 @@ export default function ProfileEditor() {
   const scan = scanResume(profile);
   const skillValidation = validateSkills(profile);
 
-  const PreviewTemplate = resolveTemplateComponent(templateId);
+  const activeTemplateId = hoveredTemplateId ?? templateId;
+  const PreviewTemplate = resolveTemplateComponent(activeTemplateId);
 
   return (
     <div className="app editor-with-preview">
     <div className="editor-form-column">
       <h1 className="page-title">Master Profile</h1>
-      <EditorToolbar />
+      <EditorToolbar
+        onPreview={() => setPreviewOpen(true)}
+        onAiReview={() => {
+          document.getElementById("resume-health")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (aiModeEnabled) handleGetAiFeedback();
+        }}
+      />
 
       <section className="form-section" id="import">
         <h2>Import from Resume</h2>
@@ -509,6 +518,8 @@ export default function ProfileEditor() {
               type="button"
               className={templateId === t.id ? "template-option active" : "template-option"}
               onClick={() => setTemplateId(t.id)}
+              onMouseEnter={() => setHoveredTemplateId(t.id)}
+              onMouseLeave={() => setHoveredTemplateId(null)}
               title={t.description}
             >
               {t.name}
@@ -523,6 +534,36 @@ export default function ProfileEditor() {
           </div>
         </div>
       </aside>
+
+      {previewOpen && (
+        <div className="preview-overlay" onClick={() => setPreviewOpen(false)}>
+          <div className="preview-overlay-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-overlay-header">
+              <div className="template-picker">
+                {RESUME_TEMPLATES.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    className={templateId === t.id ? "template-option active" : "template-option"}
+                    onClick={() => setTemplateId(t.id)}
+                    onMouseEnter={() => setHoveredTemplateId(t.id)}
+                    onMouseLeave={() => setHoveredTemplateId(null)}
+                    title={t.description}
+                  >
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="shell-close" onClick={() => setPreviewOpen(false)} aria-label="Close preview">
+                ✕
+              </button>
+            </div>
+            <div className="preview-overlay-body">
+              <PreviewTemplate resume={buildFullResume(profile)} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
