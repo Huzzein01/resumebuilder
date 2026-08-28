@@ -92,3 +92,138 @@
 .resume-numbered-list li {
   margin-bottom: 4px;
 }
+
+/* ============================================================
+   Template variants -- same single-column, ATS-safe structure
+   (no tables/columns/graphics), typography/color/spacing only.
+   ============================================================ */
+
+/* Minimal: clean sans-serif, left-aligned, understated dividers, generous whitespace. */
+.resume-doc[data-variant="minimal-sans"] {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: 44px 40px;
+}
+.resume-doc[data-variant="minimal-sans"] .resume-header {
+  text-align: left;
+}
+.resume-doc[data-variant="minimal-sans"] .resume-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.resume-doc[data-variant="minimal-sans"] .resume-section-title {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-bottom: 1px solid #cccccc;
+  color: #333333;
+}
+.resume-doc[data-variant="minimal-sans"] .resume-section {
+  margin-bottom: 20px;
+}
+
+/* Modern Serif: refined literary serif with a maroon accent. */
+.resume-doc[data-variant="modern-serif"] {
+  font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+}
+.resume-doc[data-variant="modern-serif"] .resume-name {
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+}
+.resume-doc[data-variant="modern-serif"] .resume-section-title {
+  color: #7a2e2e;
+  border-bottom: 2px solid #7a2e2e;
+}
+.resume-doc[data-variant="modern-serif"] .resume-entry-dates {
+  color: #7a2e2e;
+}
+
+/* Bold Header: a colored band behind the name; rest of the resume stays plain black-on-white text, so an ATS parser sees the same content either way. */
+.resume-doc[data-variant="bold-header"] {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: 0;
+}
+.resume-doc[data-variant="bold-header"] .resume-header {
+  background: #1a2b4a;
+  color: #ffffff;
+  padding: 32px 40px 24px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.resume-doc[data-variant="bold-header"] .resume-name {
+  font-size: 1.7rem;
+}
+.resume-doc[data-variant="bold-header"] .resume-section {
+  padding: 0 40px;
+}
+.resume-doc[data-variant="bold-header"] .resume-section:last-child {
+  padding-bottom: 32px;
+}
+.resume-doc[data-variant="bold-header"] .resume-section-title {
+  border-bottom: none;
+  border-left: 3px solid #1a2b4a;
+  padding-left: 8px;
+  color: #1a2b4a;
+}
+
+/* Compact: tighter spacing and smaller type to fit more on one page. */
+.resume-doc[data-variant="compact"] {
+  padding: 30px 34px;
+  line-height: 1.3;
+}
+.resume-doc[data-variant="compact"] .resume-name {
+  font-size: 1.35rem;
+}
+.resume-doc[data-variant="compact"] .resume-section {
+  margin-bottom: 10px;
+}
+.resume-doc[data-variant="compact"] .resume-section-title {
+  font-size: 0.88rem;
+  margin-bottom: 5px;
+}
+.resume-doc[data-variant="compact"] .resume-entry {
+  margin-bottom: 6px;
+}
+.resume-doc[data-variant="compact"] .resume-bullet,
+.resume-doc[data-variant="compact"] .resume-summary,
+.resume-doc[data-variant="compact"] .resume-skills-line {
+  font-size: 0.82rem;
+}
+
+/* Executive: formal Times New Roman, small-caps name, traditional double rule. */
+.resume-doc[data-variant="executive"] {
+  font-family: "Times New Roman", Times, serif;
+}
+.resume-doc[data-variant="executive"] .resume-name {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 1.4rem;
+}
+.resume-doc[data-variant="executive"] .resume-header {
+  border-bottom: 3px double #000000;
+  padding-bottom: 10px;
+}
+.resume-doc[data-variant="executive"] .resume-section-title {
+  text-align: center;
+}
+
+/* Technical: monospace section headers, popular for engineering resumes. */
+.resume-doc[data-variant="technical"] {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.resume-doc[data-variant="technical"] .resume-name {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 1.4rem;
+}
+.resume-doc[data-variant="technical"] .resume-section-title {
+  font-family: "Consolas", "Courier New", monospace;
+  color: #0e6e5d;
+  border-bottom: 1px solid #0e6e5d;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.resume-doc[data-variant="technical"] .resume-entry-dates {
+  font-family: "Consolas", "Courier New", monospace;
+  font-style: normal;
+  font-size: 0.82rem;
+}

@@ -13,8 +13,8 @@ export default function TemplatesGallery() {
     <div className="app">
       <h1 className="page-title">Templates</h1>
       <p className="status">
-        Pick a template while tailoring a resume to a job description -- the picker there switches live between
-        these.
+        Pick a template while tailoring a resume, or in the Resume Builder's own preview -- both switch live as you
+        hover. Every template exports to both PDF and DOCX.
       </p>
       <div className="template-gallery">
         {RESUME_TEMPLATES.map((t) => (
@@ -34,6 +34,11 @@ export default function TemplatesGallery() {
               </div>
             </div>
             <span className="template-gallery-name">{t.name}</span>
+            <div className="template-gallery-badges">
+              {t.atsFriendly && <span className="pill pill-nice">ATS-Friendly</span>}
+              <span className="pill pill-nice">PDF</span>
+              <span className="pill pill-nice">DOCX</span>
+            </div>
             <span className="template-gallery-description">{t.description}</span>
           </button>
         ))}

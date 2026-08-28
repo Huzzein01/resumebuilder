@@ -1203,6 +1203,12 @@ section.form-section h3 {
   font-weight: 700;
 }
 
+.template-gallery-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .template-gallery-description {
   font-size: 0.82rem;
   color: var(--muted);
