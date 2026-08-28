@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { scanResume, stripRichText, type ResumeHealthAiResult } from "@resumebuilder/shared";
+import { scanResume, stripRichText, type Profile, type ResumeHealthAiResult } from "@resumebuilder/shared";
 import { ProfileModel } from "../models/Profile.js";
 import { getOrCreateDefaultProfileDoc, DEFAULT_SLUG } from "../services/profileStore.js";
 import { toProfile } from "../utils/profileMapper.js";
@@ -19,16 +19,28 @@ export async function getProfile(_req: Request, res: Response): Promise<void> {
  * configured, every provider down, bad output) is swallowed and reported
  * back as method: "unavailable" rather than a 500, since this is
  * supplementary feedback the page can simply omit.
+ *
+ * Accepts an optional `profile` in the POST body so it can grade
+ * whatever's actually in the editor right now -- including a resume
+ * just parsed from an upload that hasn't been saved yet -- rather than
+ * only ever reading the last-saved copy from the database, which would
+ * silently grade stale data immediately after an import.
  */
 export async function getResumeHealthAi(req: Request, res: Response): Promise<void> {
   if (!isAiModeRequested(req)) {
-    const result: ResumeHealthAiResult = { suggestions: [], method: "unavailable" };
+    const result: ResumeHealthAiResult = { strengths: [], suggestions: [], method: "unavailable" };
     res.json(result);
     return;
   }
 
-  const doc = await getOrCreateDefaultProfileDoc();
-  const profile = toProfile(doc);
+  const suppliedProfile = req.body?.profile as Profile | undefined;
+  let profile: Profile;
+  if (suppliedProfile) {
+    profile = suppliedProfile;
+  } else {
+    const doc = await getOrCreateDefaultProfileDoc();
+    profile = toProfile(doc);
+  }
   const scan = scanResume(profile);
   const alreadyFlaggedCategories = [...new Set(scan.suggestions.map((s) => s.category))];
 
@@ -50,16 +62,23 @@ export async function getResumeHealthAi(req: Request, res: Response): Promise<vo
   ];
 
   try {
-    const { suggestions, providerName } = await generateResumeHealthSuggestionsWithLlm({
+    const { strengths, suggestions, providerName } = await generateResumeHealthSuggestionsWithLlm({
       summary: stripRichText(profile.summary),
       bullets,
       alreadyFlaggedCategories,
+      profileShape: {
+        skillCount: profile.skills.length,
+        workExperienceCount: profile.workExperience.length,
+        projectCount: profile.projects.length,
+        educationCount: profile.education.length,
+        certificationCount: profile.certifications.length,
+      },
     });
-    const result: ResumeHealthAiResult = { suggestions, method: "llm", provider: providerName };
+    const result: ResumeHealthAiResult = { strengths, suggestions, method: "llm", provider: providerName };
     res.json(result);
   } catch (err) {
     console.error("LLM resume health suggestions failed:", err);
-    const result: ResumeHealthAiResult = { suggestions: [], method: "unavailable" };
+    const result: ResumeHealthAiResult = { strengths: [], suggestions: [], method: "unavailable" };
     res.json(result);
   }
 }

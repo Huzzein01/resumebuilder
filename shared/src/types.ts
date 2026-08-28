@@ -354,6 +354,7 @@ export interface AiResumeSuggestion {
 }
 
 export interface ResumeHealthAiResult {
+  strengths: string[];
   suggestions: AiResumeSuggestion[];
   method: "llm" | "unavailable";
   provider?: string;

@@ -89,7 +89,9 @@ export default function ProfileEditor() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
   const [aiHealthStatus, setAiHealthStatus] = useState<AiHealthStatus>("idle");
+  const [aiHealthStrengths, setAiHealthStrengths] = useState<string[]>([]);
   const [aiHealthSuggestions, setAiHealthSuggestions] = useState<AiResumeSuggestion[]>([]);
+  const [aiHealthAutoTriggered, setAiHealthAutoTriggered] = useState(false);
   const [templateId, setTemplateId] = useState<ResumeTemplateId>(DEFAULT_RESUME_TEMPLATE_ID);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { enabled: aiModeEnabled } = useAiMode();
@@ -121,9 +123,19 @@ export default function ProfileEditor() {
     setImportError(null);
     try {
       const { draft, method } = await importProfile(file);
-      setProfile({ ...profile, ...draft });
+      const merged = { ...profile, ...draft };
+      setProfile(merged);
       setImportMethod(method);
       setImportStatus("imported");
+      // Auto-grade the freshly-parsed data immediately, in AI mode -- the
+      // point of attaching a resume is to see how it reads right away, not
+      // to require a second manual click. Grades the in-memory merged
+      // profile directly (not yet saved), so it reflects what was just
+      // imported rather than stale database content.
+      if (aiModeEnabled) {
+        setAiHealthAutoTriggered(true);
+        await handleGetAiFeedback(merged);
+      }
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Failed to import resume.");
       setImportStatus("error");
@@ -132,10 +144,11 @@ export default function ProfileEditor() {
     }
   }
 
-  async function handleGetAiFeedback() {
+  async function handleGetAiFeedback(overrideProfile?: Profile) {
     setAiHealthStatus("loading");
     try {
-      const { suggestions } = await fetchResumeHealthAi();
+      const { strengths, suggestions } = await fetchResumeHealthAi(overrideProfile ?? profile ?? undefined);
+      setAiHealthStrengths(strengths);
       setAiHealthSuggestions(suggestions);
       setAiHealthStatus("loaded");
     } catch {
@@ -215,6 +228,11 @@ export default function ProfileEditor() {
           </p>
         )}
         {importStatus === "error" && <p className="status">{importError}</p>}
+        {importStatus === "imported" && !aiModeEnabled && (
+          <p className="status">
+            Switch to AI Mode before importing to get an automatic strengths/weaknesses grade on the parsed resume.
+          </p>
+        )}
       </section>
 
       <section className="form-section" id="resume-health">
@@ -248,7 +266,7 @@ export default function ProfileEditor() {
           <button
             type="button"
             className="secondary"
-            onClick={handleGetAiFeedback}
+            onClick={() => handleGetAiFeedback()}
             disabled={!aiModeEnabled || aiHealthStatus === "loading"}
             title={aiModeEnabled ? undefined : "Switch to AI Mode in the header to use this"}
           >
@@ -260,22 +278,48 @@ export default function ProfileEditor() {
         {aiHealthStatus === "loaded" && (
           <div className="ai-suggestions">
             <p className="status">
-              Qualitative writing feedback from an AI model — informational only, it never affects the score above.
+              {aiHealthAutoTriggered
+                ? "Auto-graded right after import — "
+                : ""}
+              Qualitative feedback from an AI model — informational only, it never affects the score above.
             </p>
-            {aiHealthSuggestions.length === 0 ? (
+
+            {aiHealthStrengths.length > 0 && (
+              <>
+                <p className="ai-suggestions-subhead">Strengths</p>
+                <ul className="suggestion-list">
+                  {aiHealthStrengths.map((s, i) => (
+                    <li key={i} className="suggestion">
+                      <span className="suggestion-severity-dot suggestion-severity-dot-strength" aria-hidden="true" />
+                      <div className="suggestion-body">
+                        <span className="suggestion-message">{s}</span>
+                        <span className="pill pill-ai suggestion-category-pill">AI</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {aiHealthSuggestions.length > 0 && (
+              <>
+                <p className="ai-suggestions-subhead">Suggested improvements</p>
+                <ul className="suggestion-list">
+                  {aiHealthSuggestions.map((s) => (
+                    <li key={s.id} className="suggestion">
+                      <span className="suggestion-severity-dot suggestion-severity-dot-ai" aria-hidden="true" />
+                      <div className="suggestion-body">
+                        <span className="suggestion-message">{s.message}</span>
+                        <span className="pill pill-ai suggestion-category-pill">AI</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {aiHealthStrengths.length === 0 && aiHealthSuggestions.length === 0 && (
               <p className="status">No additional feedback — this profile reads well.</p>
-            ) : (
-              <ul className="suggestion-list">
-                {aiHealthSuggestions.map((s) => (
-                  <li key={s.id} className="suggestion">
-                    <span className="suggestion-severity-dot suggestion-severity-dot-ai" aria-hidden="true" />
-                    <div className="suggestion-body">
-                      <span className="suggestion-message">{s.message}</span>
-                      <span className="pill pill-ai suggestion-category-pill">AI</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         )}

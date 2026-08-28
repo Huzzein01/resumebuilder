@@ -844,6 +844,19 @@ section.form-section h3 {
   background: var(--accent);
 }
 
+.suggestion-severity-dot-strength {
+  background: var(--primary);
+}
+
+.ai-suggestions-subhead {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 14px 0 6px;
+}
+
 .suggestion-body {
   display: flex;
   flex-direction: column;

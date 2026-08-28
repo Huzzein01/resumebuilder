@@ -33,8 +33,17 @@ export async function importProfile(file: File): Promise<ProfileImportResult> {
   return res.json();
 }
 
-export async function fetchResumeHealthAi(): Promise<ResumeHealthAiResult> {
-  const res = await fetch(`${API_BASE_URL}/profile/health/ai`, { headers: aiModeHeader() });
+/**
+ * Pass the current in-editor profile (e.g. right after an import, before
+ * it's saved) to grade that exact data instead of whatever's last saved in
+ * the database. Omit it to grade the saved copy, same as before.
+ */
+export async function fetchResumeHealthAi(profile?: Profile): Promise<ResumeHealthAiResult> {
+  const res = await fetch(`${API_BASE_URL}/profile/health/ai`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...aiModeHeader() },
+    body: JSON.stringify(profile ? { profile } : {}),
+  });
   if (!res.ok) throw new Error(`Failed to fetch AI resume feedback: ${res.status}`);
   return res.json();
 }

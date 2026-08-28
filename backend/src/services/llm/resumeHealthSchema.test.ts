@@ -12,9 +12,17 @@ describe("parseLlmResumeHealth", () => {
     expect(parsed.suggestions[0].message).toBe("Lead with a stronger verb.");
   });
 
-  it("defaults to an empty suggestions array when omitted", () => {
+  it("defaults to empty strengths and suggestions arrays when omitted", () => {
     const parsed = parseLlmResumeHealth(JSON.stringify({}));
     expect(parsed.suggestions).toEqual([]);
+    expect(parsed.strengths).toEqual([]);
+  });
+
+  it("parses strengths", () => {
+    const parsed = parseLlmResumeHealth(
+      JSON.stringify({ strengths: ["Clear, quantified impact in the top bullet."], suggestions: [] })
+    );
+    expect(parsed.strengths).toEqual(["Clear, quantified impact in the top bullet."]);
   });
 
   it("throws on invalid JSON", () => {

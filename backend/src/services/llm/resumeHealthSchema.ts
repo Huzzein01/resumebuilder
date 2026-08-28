@@ -7,6 +7,7 @@ const llmResumeHealthSuggestionSchema = z.object({
 });
 
 export const llmResumeHealthSchema = z.object({
+  strengths: z.array(z.string()).default([]),
   suggestions: z.array(llmResumeHealthSuggestionSchema).default([]),
 });
 

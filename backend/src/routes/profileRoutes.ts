@@ -12,7 +12,7 @@ const upload = multer({
 const router = Router();
 
 router.get("/", asyncHandler(getProfile));
-router.get("/health/ai", asyncHandler(getResumeHealthAi));
+router.post("/health/ai", asyncHandler(getResumeHealthAi));
 router.put("/", asyncHandler(updateProfile));
 router.post("/import", upload.single("resume"), asyncHandler(importProfile));
 

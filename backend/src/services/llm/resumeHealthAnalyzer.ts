@@ -11,6 +11,7 @@ import { parseLlmResumeHealth } from "./resumeHealthSchema.js";
 const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider];
 
 export interface LlmResumeHealthResult {
+  strengths: string[];
   suggestions: AiResumeSuggestion[];
   providerName: string;
 }
@@ -44,5 +45,7 @@ export async function generateResumeHealthSuggestionsWithLlm(
       };
     });
 
-  return { suggestions, providerName };
+  const strengths = result.strengths.filter((s) => s.trim().length > 0).slice(0, 4);
+
+  return { strengths, suggestions, providerName };
 }
