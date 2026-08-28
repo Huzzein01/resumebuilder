@@ -10,8 +10,9 @@ import {
   type AiResumeSuggestion,
   type ResumeTemplateId,
 } from "@resumebuilder/shared";
-import { fetchProfile, saveProfile, importProfile, fetchResumeHealthAi } from "../api/profileApi.js";
+import { fetchProfile, saveProfile, importProfile, fetchResumeHealthAi, exportProfileUrl } from "../api/profileApi.js";
 import { useAiMode } from "../shell/AiModeContext.js";
+import { useNav } from "../shell/NavContext.js";
 import { resolveTemplateComponent } from "../templates/registry.js";
 import ContactForm from "../components/ContactForm.js";
 import SummaryForm from "../components/SummaryForm.js";
@@ -112,8 +113,10 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const [templateId, setTemplateId] = useState<ResumeTemplateId>(initialTemplateId ?? DEFAULT_RESUME_TEMPLATE_ID);
   const [hoveredTemplateId, setHoveredTemplateId] = useState<ResumeTemplateId | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { enabled: aiModeEnabled } = useAiMode();
+  const { navigate } = useNav();
 
   useEffect(() => {
     fetchProfile()
@@ -241,6 +244,52 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const topBarExtraNode = useMemo(
     () => (
       <>
+        <button
+          type="button"
+          className="editor-toolbar-tool"
+          onClick={() => navigate({ page: "editor-jd" })}
+          title="Generate a cover letter for a specific job"
+        >
+          ✉️ AI Cover Letter
+        </button>
+        <button
+          type="button"
+          className="editor-toolbar-tool"
+          onClick={() => setActiveSectionId("import")}
+          title="Import from an existing resume file"
+        >
+          ⬆️ Import
+        </button>
+        <div className="topbar-download-menu">
+          <button
+            type="button"
+            className="editor-toolbar-tool"
+            onClick={() => setDownloadMenuOpen((open) => !open)}
+            title="Download this profile as a resume"
+          >
+            ⬇️ Download
+          </button>
+          {downloadMenuOpen && (
+            <div className="topbar-download-options" onMouseLeave={() => setDownloadMenuOpen(false)}>
+              <a
+                href={exportProfileUrl("pdf", templateId)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setDownloadMenuOpen(false)}
+              >
+                PDF
+              </a>
+              <a
+                href={exportProfileUrl("docx", templateId)}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setDownloadMenuOpen(false)}
+              >
+                DOCX
+              </a>
+            </div>
+          )}
+        </div>
         <span className="status">
           {status === "saved" && "Saved"}
           {status === "error" && "Something went wrong"}
@@ -250,7 +299,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         </button>
       </>
     ),
-    [status, profile, handleSave]
+    [status, profile, handleSave, downloadMenuOpen, templateId, navigate]
   );
   useSetTopBarExtra(topBarExtraNode);
 

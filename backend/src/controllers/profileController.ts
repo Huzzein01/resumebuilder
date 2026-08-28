@@ -1,10 +1,20 @@
 import type { Request, Response } from "express";
-import { scanResume, stripRichText, type Profile, type ResumeHealthAiResult } from "@resumebuilder/shared";
+import {
+  scanResume,
+  stripRichText,
+  buildFullResume,
+  isResumeTemplateId,
+  DEFAULT_RESUME_TEMPLATE_ID,
+  type Profile,
+  type ResumeHealthAiResult,
+} from "@resumebuilder/shared";
 import { ProfileModel } from "../models/Profile.js";
 import { getOrCreateDefaultProfileDoc, DEFAULT_SLUG } from "../services/profileStore.js";
 import { toProfile } from "../utils/profileMapper.js";
 import { generateResumeHealthSuggestionsWithLlm } from "../services/llm/resumeHealthAnalyzer.js";
 import { isAiModeRequested } from "../middleware/aiMode.js";
+import { renderProfileToPdf } from "../export/pdf.js";
+import { buildResumeDocx } from "../export/docx.js";
 
 export async function getProfile(_req: Request, res: Response): Promise<void> {
   const doc = await getOrCreateDefaultProfileDoc();
@@ -139,4 +149,32 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
   );
 
   res.json(toProfile(doc));
+}
+
+/**
+ * Download the whole Master Profile as-is (every section, nothing tailored
+ * out for a job description) in the currently-selected template -- the
+ * "Download" action in the Resume Builder's top bar. Distinct from the
+ * ResumeVersion PDF/DOCX routes, which require a jobDescriptionId + a
+ * selection tied to that JD's relevance scoring and don't apply here.
+ */
+export async function exportProfilePdf(req: Request, res: Response): Promise<void> {
+  const templateId = isResumeTemplateId(req.query.template) ? req.query.template : DEFAULT_RESUME_TEMPLATE_ID;
+  const pdfBuffer = await renderProfileToPdf(templateId);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'attachment; filename="resume.pdf"');
+  res.send(pdfBuffer);
+}
+
+export async function exportProfileDocx(req: Request, res: Response): Promise<void> {
+  const doc = await getOrCreateDefaultProfileDoc();
+  const profile = toProfile(doc);
+  const resume = buildFullResume(profile);
+  const docxBuffer = await buildResumeDocx(resume);
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  );
+  res.setHeader("Content-Disposition", 'attachment; filename="resume.docx"');
+  res.send(docxBuffer);
 }

@@ -3,10 +3,12 @@ import ReactDOM from "react-dom/client";
 import App from "./App.js";
 import PrintView from "./pages/PrintView.js";
 import PrintCoverLetterView from "./pages/PrintCoverLetterView.js";
+import PrintProfileView from "./pages/PrintProfileView.js";
 import ErrorBoundary from "./components/ErrorBoundary.js";
 import "./index.css";
 
 const coverLetterMatch = window.location.pathname.match(/^\/print\/cover-letter\/([^/]+)$/);
+const profileMatch = window.location.pathname === "/print/profile";
 const printMatch = window.location.pathname.match(/^\/print\/([^/]+)$/);
 
 function resolvePage() {
@@ -19,6 +21,10 @@ function resolvePage() {
         hiringManagerName={params.get("hiringManagerName") ?? undefined}
       />
     );
+  }
+  if (profileMatch) {
+    const params = new URLSearchParams(window.location.search);
+    return <PrintProfileView templateParam={params.get("template")} />;
   }
   if (printMatch) return <PrintView id={printMatch[1]} />;
   return <App />;

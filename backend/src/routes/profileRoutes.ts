@@ -1,6 +1,12 @@
 import { Router } from "express";
 import multer from "multer";
-import { getProfile, updateProfile, getResumeHealthAi } from "../controllers/profileController.js";
+import {
+  getProfile,
+  updateProfile,
+  getResumeHealthAi,
+  exportProfilePdf,
+  exportProfileDocx,
+} from "../controllers/profileController.js";
 import { importProfile } from "../controllers/profileImportController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 
@@ -15,5 +21,7 @@ router.get("/", asyncHandler(getProfile));
 router.post("/health/ai", asyncHandler(getResumeHealthAi));
 router.put("/", asyncHandler(updateProfile));
 router.post("/import", upload.single("resume"), asyncHandler(importProfile));
+router.get("/export/pdf", asyncHandler(exportProfilePdf));
+router.get("/export/docx", asyncHandler(exportProfileDocx));
 
 export default router;

@@ -1,6 +1,11 @@
-import type { Profile, ProfileImportResult, ResumeHealthAiResult } from "@resumebuilder/shared";
+import type { Profile, ProfileImportResult, ResumeHealthAiResult, ResumeTemplateId } from "@resumebuilder/shared";
 import { API_BASE_URL } from "./config.js";
 import { aiModeHeader } from "../aiMode.js";
+
+/** Opens the Master Profile PDF/DOCX download in a new tab -- server streams it as an attachment, so there's nothing to await here (matches the ResumeVersion export pattern in JobDescriptionPage). */
+export function exportProfileUrl(format: "pdf" | "docx", templateId: ResumeTemplateId): string {
+  return `${API_BASE_URL}/profile/export/${format}?template=${encodeURIComponent(templateId)}`;
+}
 
 export async function fetchProfile(): Promise<Profile> {
   const res = await fetch(`${API_BASE_URL}/profile`);

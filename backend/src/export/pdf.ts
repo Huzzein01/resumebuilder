@@ -1,4 +1,22 @@
 import puppeteer from "puppeteer";
+import type { ResumeTemplateId } from "@resumebuilder/shared";
+
+/** Master Profile download (untailored, whatever template is currently selected) -- see exportProfilePdf. */
+export async function renderProfileToPdf(templateId: ResumeTemplateId): Promise<Buffer> {
+  const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
+  const printUrl = `${frontendUrl}/print/profile?template=${encodeURIComponent(templateId)}`;
+
+  const browser = await puppeteer.launch();
+  try {
+    const page = await browser.newPage();
+    await page.goto(printUrl, { waitUntil: "networkidle0" });
+    await page.waitForSelector(".resume-print-root");
+    const pdfUint8Array = await page.pdf({ format: "Letter", printBackground: true });
+    return Buffer.from(pdfUint8Array);
+  } finally {
+    await browser.close();
+  }
+}
 
 export async function renderResumeVersionToPdf(resumeVersionId: string): Promise<Buffer> {
   const frontendUrl = process.env.FRONTEND_URL ?? "http://localhost:5173";
