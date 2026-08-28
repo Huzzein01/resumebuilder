@@ -1318,7 +1318,7 @@ section.form-section h3 {
 
 .editor-with-preview {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 24px;
 }
 
@@ -1327,14 +1327,23 @@ section.form-section h3 {
   min-width: 0;
 }
 
+/* Sized/proportioned to sit right next to the form column at a comparable
+   visual weight, matching Main.pdf's reference layout -- narrower share of
+   the row than the form column (roughly a third, not near-half), and tall
+   enough to read as a real card rather than a shrunk-to-fit stub. */
 .editor-preview-column {
-  width: 380px;
+  width: 340px;
   flex: none;
   position: sticky;
   top: 20px;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
 }
 
 .editor-preview-frame {
+  flex: 1;
+  min-height: 520px;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
   padding: 14px;
@@ -1349,7 +1358,7 @@ section.form-section h3 {
      paint, so the outer wrapper auto-sizes to the scaled-down height --
      no manual height math needed, and no leftover blank space. */
   width: 760px;
-  zoom: 0.46;
+  zoom: 0.42;
 }
 
 @media (max-width: 900px) {
