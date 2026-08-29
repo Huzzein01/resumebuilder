@@ -132,6 +132,7 @@ const ProfileSchema = new Schema(
   {
     slug: { type: String, required: true, unique: true },
     title: { type: String, default: "Master Profile" },
+    sectionOrder: { type: [String], default: [] },
     contact: { type: ContactInfoSchema, required: true, default: () => ({}) },
     summary: { type: String, default: "" },
     workExperience: { type: [WorkExperienceSchema], default: [] },

@@ -225,6 +225,18 @@ h3 {
   flex: none;
 }
 
+.section-nav-drag-handle {
+  color: var(--faint);
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: grab;
+  flex: none;
+}
+
+.section-nav-item.dragging {
+  opacity: 0.5;
+}
+
 .section-nav-label-group {
   font-size: 0.72rem;
   font-weight: 700;

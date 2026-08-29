@@ -96,6 +96,7 @@ export async function getResumeHealthAi(req: Request, res: Response): Promise<vo
 export async function updateProfile(req: Request, res: Response): Promise<void> {
   const {
     title,
+    sectionOrder,
     contact,
     summary,
     workExperience,
@@ -124,6 +125,7 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
     { slug: DEFAULT_SLUG },
     {
       title: title?.trim() || "Master Profile",
+      sectionOrder: Array.isArray(sectionOrder) ? sectionOrder : [],
       contact,
       summary,
       workExperience,

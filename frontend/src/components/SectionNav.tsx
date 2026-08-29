@@ -18,6 +18,14 @@ interface SectionNavProps {
    */
   activeId?: string;
   onSelect?: (id: string) => void;
+  /**
+   * Enables drag-to-reorder (native HTML5 DnD, same pattern as
+   * DraggableChecklist) -- called with the full reordered id list on drop.
+   * Only meaningful in controlled mode; omit to leave items non-draggable
+   * (e.g. JobDescriptionPage's scroll-anchor usage, where reordering
+   * wouldn't mean anything).
+   */
+  onReorder?: (newOrderIds: string[]) => void;
 }
 
 /**
@@ -29,11 +37,12 @@ interface SectionNavProps {
  * mode (activeId/onSelect both passed) it's a plain page switcher --
  * there's nothing to scroll to since only one section renders at a time.
  */
-export default function SectionNav({ items, activeId: controlledActiveId, onSelect }: SectionNavProps) {
+export default function SectionNav({ items, activeId: controlledActiveId, onSelect, onReorder }: SectionNavProps) {
   const isControlled = controlledActiveId !== undefined && onSelect !== undefined;
   const [internalActiveId, setInternalActiveId] = useState(items.find((i) => !i.disabled)?.id ?? items[0]?.id);
   const activeId = isControlled ? controlledActiveId : internalActiveId;
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isControlled) return;
@@ -65,7 +74,7 @@ export default function SectionNav({ items, activeId: controlledActiveId, onSele
   function handleClick(item: SectionNavItem) {
     if (item.disabled) return;
     if (isControlled) {
-      onSelect(item.id);
+      onSelect!(item.id);
       return;
     }
     const el = document.getElementById(item.id);
@@ -73,17 +82,40 @@ export default function SectionNav({ items, activeId: controlledActiveId, onSele
     setInternalActiveId(item.id);
   }
 
+  function handleDrop(targetId: string) {
+    if (!onReorder || !draggingId || draggingId === targetId) {
+      setDraggingId(null);
+      return;
+    }
+    const ids = items.map((i) => i.id);
+    const withoutSource = ids.filter((id) => id !== draggingId);
+    const targetIndex = withoutSource.indexOf(targetId);
+    withoutSource.splice(targetIndex, 0, draggingId);
+    onReorder(withoutSource);
+    setDraggingId(null);
+  }
+
   return (
     <nav className="section-nav" aria-label="Sections">
       {items.map((item) => (
         <button
           key={item.id}
-          className={`section-nav-item${activeId === item.id ? " active" : ""}${item.disabled ? " disabled" : ""}`}
+          className={`section-nav-item${activeId === item.id ? " active" : ""}${item.disabled ? " disabled" : ""}${draggingId === item.id ? " dragging" : ""}`}
           onClick={() => handleClick(item)}
           disabled={item.disabled}
           title={item.disabled ? item.disabledHint : undefined}
           type="button"
+          draggable={!!onReorder}
+          onDragStart={onReorder ? () => setDraggingId(item.id) : undefined}
+          onDragOver={onReorder ? (e) => e.preventDefault() : undefined}
+          onDrop={onReorder ? () => handleDrop(item.id) : undefined}
+          onDragEnd={onReorder ? () => setDraggingId(null) : undefined}
         >
+          {onReorder && (
+            <span className="section-nav-drag-handle" aria-hidden="true">
+              ⠿
+            </span>
+          )}
           {item.icon && (
             <span className="section-nav-icon" aria-hidden="true">
               {item.icon}

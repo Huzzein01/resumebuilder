@@ -5,6 +5,7 @@ import {
   buildFullResume,
   RESUME_TEMPLATES,
   DEFAULT_RESUME_TEMPLATE_ID,
+  resolveSectionOrder,
   type Profile,
   type ScanTargetType,
   type AiResumeSuggestion,
@@ -267,15 +268,52 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   // below) and every match shows, unpaginated -- narrowing what's already a
   // deliberate search result would be a second, confusing filter on top of
   // the first. Only the unfiltered default view caps the list length.
-  const profileItems = useMemo(
-    () => filteredSectionItems.filter((i) => i.group === "Profile"),
-    [filteredSectionItems]
-  );
+  //
+  // Contact Info is pinned, separate from the reorderable/draggable list --
+  // it's the resume's header, always first in the export regardless of
+  // sectionOrder (see resumeSectionOrder.ts), so letting it be dragged
+  // alongside sections whose order it doesn't actually share would be
+  // misleading UI. -1 on the visible count so the *total* shown still
+  // matches DEFAULT_VISIBLE_SECTION_COUNT with Contact Info included.
+  const contactItem = filteredSectionItems.find((i) => i.id === "contact-info");
+  // Ordered by the user's saved drag order (profile.sectionOrder), via the
+  // same resolveSectionOrder used to render the actual resume -- so the
+  // sidebar list, not just the exported document, reflects a reorder.
+  // Sections outside RESUME_SECTION_ORDER's id space (a stale/unknown id
+  // never happens here since resolveSectionOrder already drops those) or not
+  // matching the current search fall out of the byId lookup and are simply
+  // skipped, which is what we want either way.
+  const profileItems = useMemo(() => {
+    const base = filteredSectionItems.filter((i) => i.group === "Profile" && i.id !== "contact-info");
+    const byId = new Map(base.map((i) => [i.id, i]));
+    const ordered = resolveSectionOrder(profile?.sectionOrder)
+      .map((id) => byId.get(id))
+      .filter((i): i is (typeof base)[number] => !!i);
+    return ordered;
+  }, [filteredSectionItems, profile?.sectionOrder]);
   const visibleProfileItems = useMemo(
-    () => (isSearching || sectionsExpanded ? profileItems : profileItems.slice(0, DEFAULT_VISIBLE_SECTION_COUNT)),
+    () =>
+      isSearching || sectionsExpanded ? profileItems : profileItems.slice(0, DEFAULT_VISIBLE_SECTION_COUNT - 1),
     [profileItems, isSearching, sectionsExpanded]
   );
   const hiddenSectionCount = profileItems.length - visibleProfileItems.length;
+
+  // Same latest-ref pattern as aiReviewRef above, same reason: the handler
+  // needs the current profile/profileItems/visibleProfileItems, but none of
+  // those are stable references, so putting them in sidebarNode's memo deps
+  // would recompute it (and re-push it into shell state) every render.
+  // SectionNav only ever reorders within the *visible* items (6 by default,
+  // all of them once expanded) -- since visibleProfileItems is always a
+  // prefix of profileItems, splicing the reordered prefix back in front of
+  // the untouched remainder reconstructs the correct full order either way.
+  const reorderSectionsRef = useRef<(newVisibleOrder: string[]) => void>(() => {});
+  useEffect(() => {
+    reorderSectionsRef.current = (newVisibleOrder: string[]) => {
+      if (!profile) return;
+      const hiddenIds = profileItems.slice(visibleProfileItems.length).map((i) => i.id);
+      setProfile({ ...profile, sectionOrder: [...newVisibleOrder, ...hiddenIds] });
+    };
+  });
 
   const sidebarNode = useMemo(
     () => (
@@ -298,10 +336,18 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
               />
             </div>
           )}
-        {visibleProfileItems.length > 0 && (
+        {(contactItem || visibleProfileItems.length > 0) && (
           <div>
             <div className="section-nav-label-group">Profile</div>
-            <SectionNav items={visibleProfileItems} activeId={activeSectionId} onSelect={setActiveSectionId} />
+            {contactItem && (
+              <SectionNav items={[contactItem]} activeId={activeSectionId} onSelect={setActiveSectionId} />
+            )}
+            <SectionNav
+              items={visibleProfileItems}
+              activeId={activeSectionId}
+              onSelect={setActiveSectionId}
+              onReorder={isSearching ? undefined : (ids) => reorderSectionsRef.current(ids)}
+            />
           </div>
         )}
         {!isSearching && hiddenSectionCount > 0 && (
@@ -334,7 +380,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         )}
       </>
     ),
-    [activeSectionId, sectionSearch, filteredSectionItems, isSearching, visibleProfileItems, hiddenSectionCount, sectionsExpanded, scan]
+    [activeSectionId, sectionSearch, filteredSectionItems, isSearching, contactItem, visibleProfileItems, hiddenSectionCount, sectionsExpanded, scan]
   );
   useSetSidebar(sidebarNode);
 

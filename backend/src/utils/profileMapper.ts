@@ -7,6 +7,7 @@ export function toProfile(doc: any): Profile {
     // ?? "Master Profile" for the same reason as the arrays below: docs
     // saved before this field existed won't have it at all.
     title: obj.title ?? "Master Profile",
+    sectionOrder: obj.sectionOrder ?? [],
     contact: obj.contact,
     summary: obj.summary ?? "",
     workExperience: obj.workExperience,

@@ -101,6 +101,8 @@ export interface Profile {
   id: string;
   /** Editable document title shown in the Resume Builder's header (distinct from contact.name, the person's own name) -- e.g. "Senior Product Designer -- Resume". Optional so every existing profile-producing/merging call site (deterministic + LLM resume import, test fixtures, JD-scored snapshots) doesn't need to supply one; defaults to "Master Profile" wherever it's actually displayed or persisted. */
   title?: string;
+  /** User-customized resume section order (drag-to-reorder in the editor sidebar) -- ids from RESUME_SECTION_ORDER in resumeSectionOrder.ts. Optional/possibly-partial; resolveSectionOrder() fills in any missing ids in their default position. */
+  sectionOrder?: string[];
   contact: ContactInfo;
   summary: string;
   workExperience: WorkExperience[];
@@ -284,6 +286,8 @@ export interface TailoredResume {
   hobbiesAndInterests: string[];
   testScores: TestScore[];
   references: ReferenceEntry[];
+  /** Custom section render order (ids from RESUME_SECTION_ORDER in resumeSectionOrder.ts) -- carried through from Profile so the preview/export order matches exactly what the user dragged in the editor. Missing/undefined falls back to the default order. */
+  sectionOrder?: string[];
 }
 
 export interface ResumeVersion {

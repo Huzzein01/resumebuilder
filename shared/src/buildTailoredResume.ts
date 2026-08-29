@@ -72,6 +72,7 @@ export function buildTailoredResume(profile: Profile, selection: SelectionState)
     hobbiesAndInterests: profile.hobbiesAndInterests,
     testScores: profile.testScores,
     references: profile.references,
+    sectionOrder: profile.sectionOrder,
   };
 }
 
@@ -121,5 +122,6 @@ export function buildFullResume(profile: Profile): TailoredResume {
     hobbiesAndInterests: profile.hobbiesAndInterests,
     testScores: profile.testScores,
     references: profile.references,
+    sectionOrder: profile.sectionOrder,
   };
 }
