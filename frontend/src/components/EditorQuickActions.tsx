@@ -37,40 +37,64 @@ export default function EditorQuickActions({
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const activeTemplate = RESUME_TEMPLATES.find((t) => t.id === templateId);
 
+  function closeMenu() {
+    setTemplateMenuOpen(false);
+    onHoverTemplate(null);
+  }
+
   return (
     <div className="editor-toolbar-tools">
-      <div className="topbar-download-menu">
-        <button
-          type="button"
-          className="editor-toolbar-tool"
-          onClick={() => setTemplateMenuOpen((open) => !open)}
-          title="Choose a resume template"
-        >
-          🎨 Template: {activeTemplate?.name ?? "Classic"}
-        </button>
-        {templateMenuOpen && (
-          <div
-            className="topbar-download-options topbar-template-options"
-            onMouseLeave={() => onHoverTemplate(null)}
-          >
-            {RESUME_TEMPLATES.map((t) => (
+      <button
+        type="button"
+        className="editor-toolbar-tool"
+        onClick={() => setTemplateMenuOpen(true)}
+        title="Choose a resume template"
+      >
+        🎨 Template: {activeTemplate?.name ?? "Classic"}
+      </button>
+      {templateMenuOpen && (
+        // Full modal overlay, not a small dropdown -- the dropdown used to
+        // render inside .shell-subheader (overflow-x: auto), which clipped
+        // it behind the editor's content instead of showing on top. A
+        // fixed-position modal sidesteps that ancestor entirely.
+        <div className="template-modal-backdrop" onClick={closeMenu}>
+          <div className="template-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="template-modal-header">
+              <h2>Choose a resume template</h2>
               <button
-                key={t.id}
                 type="button"
-                className={t.id === templateId ? "topbar-template-option active" : "topbar-template-option"}
-                onClick={() => {
-                  onSelectTemplate(t.id);
-                  setTemplateMenuOpen(false);
-                }}
-                onMouseEnter={() => onHoverTemplate(t.id)}
-                title={t.description}
+                className="template-modal-close"
+                onClick={closeMenu}
+                aria-label="Close template picker"
+                title="Close"
               >
-                {t.name}
+                ✕
               </button>
-            ))}
+            </div>
+            <div className="template-modal-grid" onMouseLeave={() => onHoverTemplate(null)}>
+              {RESUME_TEMPLATES.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={t.id === templateId ? "template-modal-option active" : "template-modal-option"}
+                  onClick={() => {
+                    onSelectTemplate(t.id);
+                    closeMenu();
+                  }}
+                  onMouseEnter={() => onHoverTemplate(t.id)}
+                >
+                  <span className="template-modal-option-name">
+                    {t.name}
+                    {t.id === templateId && <span className="template-modal-option-badge">Selected</span>}
+                  </span>
+                  <span className="template-modal-option-description">{t.description}</span>
+                  {t.atsFriendly && <span className="template-modal-option-ats">ATS-friendly</span>}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
       <button
         type="button"
         className={`editor-toolbar-tool${previewCollapsed ? "" : " editor-toolbar-tool-primary"}`}
