@@ -302,6 +302,43 @@ button.danger:hover {
   margin-top: 8px;
 }
 
+/* Reorder/duplicate/remove icon cluster at the top of an entry-card --
+   same compact circular treatment as .entry-remove-btn, generalized so
+   the non-remove actions (move up/down, duplicate) share it too. */
+.entry-card-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.entry-icon-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 0.85rem;
+  line-height: 1;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+}
+
+.entry-icon-btn:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.entry-icon-btn-danger:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent-soft-line);
+  background: var(--accent-soft);
+}
+
 /* ---------- Page header ---------- */
 
 .toolbar {

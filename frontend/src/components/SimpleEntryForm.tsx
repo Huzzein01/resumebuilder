@@ -1,6 +1,7 @@
 import type { SimpleEntry } from "@resumebuilder/shared";
 import { v4 as uuid } from "uuid";
 import BulletList from "./BulletList.js";
+import EntryCardActions from "./EntryCardActions.js";
 
 interface Props {
   title: string;
@@ -44,11 +45,38 @@ export default function SimpleEntryForm({
     onChange(entries.filter((_, i) => i !== index));
   }
 
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= entries.length) return;
+    const next = [...entries];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function duplicate(index: number) {
+    const source = entries[index];
+    const clone: SimpleEntry = {
+      ...source,
+      id: uuid(),
+      bullets: source.bullets.map((b) => ({ ...b, id: uuid() })),
+    };
+    const next = [...entries];
+    next.splice(index + 1, 0, clone);
+    onChange(next);
+  }
+
   return (
     <section className="form-section">
       <h2>{title}</h2>
       {entries.map((entry, i) => (
         <div className="entry-card" key={entry.id}>
+          <EntryCardActions
+            onMoveUp={i > 0 ? () => move(i, -1) : undefined}
+            onMoveDown={i < entries.length - 1 ? () => move(i, 1) : undefined}
+            onDuplicate={() => duplicate(i)}
+            onRemove={() => remove(i)}
+            removeLabel={`Remove ${title.toLowerCase()} entry`}
+          />
           <div className="field-row">
             <div className="field">
               <label>{titleLabel}</label>
@@ -72,11 +100,6 @@ export default function SimpleEntryForm({
             )}
           </div>
           <BulletList bullets={entry.bullets} onChange={(bullets) => update(i, { bullets })} />
-          <div className="entry-card-footer">
-            <button className="entry-remove-btn" onClick={() => remove(i)} aria-label={`Remove ${title.toLowerCase()} entry`} title="Remove entry">
-              ✕
-            </button>
-          </div>
         </div>
       ))}
       <button onClick={add}>+ {addLabel ?? `Add ${title}`}</button>

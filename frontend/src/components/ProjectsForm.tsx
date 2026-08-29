@@ -1,6 +1,7 @@
 import type { ProjectEntry } from "@resumebuilder/shared";
 import { v4 as uuid } from "uuid";
 import BulletList from "./BulletList.js";
+import EntryCardActions from "./EntryCardActions.js";
 
 interface Props {
   entries: ProjectEntry[];
@@ -25,6 +26,26 @@ export default function ProjectsForm({ entries, onChange }: Props) {
     onChange(entries.filter((_, i) => i !== index));
   }
 
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= entries.length) return;
+    const next = [...entries];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  }
+
+  function duplicate(index: number) {
+    const source = entries[index];
+    const clone: ProjectEntry = {
+      ...source,
+      id: uuid(),
+      bullets: source.bullets.map((b) => ({ ...b, id: uuid() })),
+    };
+    const next = [...entries];
+    next.splice(index + 1, 0, clone);
+    onChange(next);
+  }
+
   function setTechStack(index: number, value: string) {
     update(index, {
       techStack: value
@@ -39,6 +60,13 @@ export default function ProjectsForm({ entries, onChange }: Props) {
       <h2>Projects</h2>
       {entries.map((entry, i) => (
         <div className="entry-card" key={entry.id}>
+          <EntryCardActions
+            onMoveUp={i > 0 ? () => move(i, -1) : undefined}
+            onMoveDown={i < entries.length - 1 ? () => move(i, 1) : undefined}
+            onDuplicate={() => duplicate(i)}
+            onRemove={() => remove(i)}
+            removeLabel="Remove project"
+          />
           <div className="field-row">
             <div className="field">
               <label>Name</label>
@@ -67,11 +95,6 @@ export default function ProjectsForm({ entries, onChange }: Props) {
             </div>
           </div>
           <BulletList bullets={entry.bullets} onChange={(bullets) => update(i, { bullets })} />
-          <div className="entry-card-footer">
-            <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove project" title="Remove project">
-              ✕
-            </button>
-          </div>
         </div>
       ))}
       <button onClick={add}>+ Add Project</button>
