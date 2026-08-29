@@ -94,7 +94,7 @@ export default function CareerToolPage({ kind }: Props) {
 
         {!aiModeEnabled && (
           <p className="status">
-            This tool is AI-only -- switch to AI Mode in the header, then a provider key needs to be configured
+            This tool is AI-only -- switch to AI Mode in Settings, then a provider key needs to be configured
             server-side for it to actually run.
           </p>
         )}

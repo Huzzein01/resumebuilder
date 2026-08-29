@@ -28,6 +28,7 @@ import { API_BASE_URL } from "../api/config.js";
 import SectionNav, { type SectionNavItem } from "../components/SectionNav.js";
 import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 import { useAiMode } from "../shell/AiModeContext.js";
+import { useNav } from "../shell/NavContext.js";
 
 type Status = "idle" | "analyzing" | "error";
 type ScoreStatus = "idle" | "scoring" | "error";
@@ -53,10 +54,6 @@ function seniorityLabel(jd: JobDescription): string {
   return parts.length > 0 ? parts.join(" · ") : "No signal detected";
 }
 
-function jumpTo(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
 export default function JobDescriptionPage() {
   const [rawText, setRawText] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -78,6 +75,7 @@ export default function JobDescriptionPage() {
   const [aiCoverLetterMethod, setAiCoverLetterMethod] = useState<"llm" | "deterministic" | null>(null);
   const [aiCoverLetterExportStatus, setAiCoverLetterExportStatus] = useState<CoverLetterExportStatus>("idle");
   const { enabled: aiModeEnabled } = useAiMode();
+  const { navigate } = useNav();
 
   useEffect(() => {
     fetchJobDescriptions()
@@ -408,21 +406,17 @@ export default function JobDescriptionPage() {
   const sidebarNode = useMemo(() => <SectionNav items={sectionItems} />, [sectionItems]);
   useSetSidebar(sidebarNode);
 
-  // Cover Letter gets a permanent, always-visible action in the top bar --
-  // it used to only exist after scrolling past three other gated sections,
-  // which made it effectively undiscoverable.
+  // A quick link back to the Resume Editor -- this page tailors/generates
+  // from the master profile edited there, so a one-click way back to it is
+  // more useful in the top bar than a same-page scroll jump to a section
+  // that's usually already in view or one click away.
   const topBarExtraNode = useMemo(
     () => (
-      <button
-        className={hasCoverLetter ? "primary" : ""}
-        onClick={() => jumpTo("cover-letter")}
-        disabled={!hasCoverLetter}
-        title={!hasCoverLetter ? "Score against your profile to unlock the cover letter" : undefined}
-      >
-        ✉️ Cover Letter
+      <button onClick={() => navigate({ page: "editor-profile" })} title="Edit your master profile">
+        📄 Resume
       </button>
     ),
-    [hasCoverLetter]
+    [navigate]
   );
   useSetTopBarExtra(topBarExtraNode);
 
@@ -681,9 +675,10 @@ export default function JobDescriptionPage() {
 
           <div className="ai-cover-letter-cta">
             <button
+              className="secondary"
               onClick={handleGenerateAiCoverLetter}
               disabled={!aiModeEnabled || aiCoverLetterStatus === "generating"}
-              title={!aiModeEnabled ? "Switch the header to AI mode to use this" : undefined}
+              title={!aiModeEnabled ? "Switch to AI Mode in Settings to use this" : undefined}
             >
               <span className="pill pill-ai">AI</span>{" "}
               {aiCoverLetterStatus === "generating" ? "Generating…" : "Generate an alternate version with AI"}
@@ -694,10 +689,17 @@ export default function JobDescriptionPage() {
       )}
 
       {aiCoverLetter && (
-        <section className="form-section" id="ai-cover-letter">
+        <section
+          className={`form-section${aiCoverLetterMethod === "llm" ? " ai-generated-section" : ""}`}
+          id="ai-cover-letter"
+        >
           <h2>
-            AI-Generated Cover Letter{" "}
-            {aiCoverLetterMethod === "deterministic" && <span className="pill pill-nice">Fell back to templated</span>}
+            {aiCoverLetterMethod === "llm" ? (
+              <span className="pill pill-ai">AI</span>
+            ) : (
+              <span className="pill pill-nice">Fell back to templated</span>
+            )}{" "}
+            AI-Generated Cover Letter
           </h2>
           <p className="status">
             A separate, optional alternate version — written by an LLM from the same matched skills and selected

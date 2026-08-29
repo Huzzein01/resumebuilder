@@ -87,6 +87,14 @@ const SECTION_ITEMS = [
 
 const DEFAULT_SECTION_ID = "contact-info";
 
+/** How many Profile sections show before "Show more" -- keeps the sidebar
+    short enough to need no scrollbar in the common case, matching Main.pdf's
+    reference (a short, unscrolled section list). Insights items (Import,
+    Resume Health, Skill Validation) don't count against or appear in this
+    list at all -- Import and Resume Health already have their own top-bar
+    shortcuts, and all three stay reachable by typing into the search box. */
+const DEFAULT_VISIBLE_SECTION_COUNT = 6;
+
 /** Static, evergreen coaching tips shown as an inline callout at the top of a section -- not derived from the user's current data (unlike Resume Health's suggestions), so they're always relevant even on a blank section. */
 const SECTION_TIPS: Partial<Record<string, string>> = {
   summary: 'Keep it to 2-3 sentences -- lead with your strongest, most specific achievement.',
@@ -105,6 +113,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const [status, setStatus] = useState<Status>("loading");
   const [activeSectionId, setActiveSectionId] = useState<string>(DEFAULT_SECTION_ID);
   const [sectionSearch, setSectionSearch] = useState("");
+  const [sectionsExpanded, setSectionsExpanded] = useState(false);
   const [importStatus, setImportStatus] = useState<ImportStatus>("idle");
   const [importError, setImportError] = useState<string | null>(null);
   const [importMethod, setImportMethod] = useState<"llm" | "deterministic" | null>(null);
@@ -245,6 +254,29 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
     [sectionSearch]
   );
 
+  const isSearching = sectionSearch.trim().length > 0;
+
+  // Memoized for the same reason filteredSectionItems is: a plain .filter()/
+  // .slice() in the render body returns a new array reference every render,
+  // which would defeat sidebarNode's own memoization below it depends on
+  // (and, worse, re-trigger the shell-state update loop this file's already
+  // been bitten by once -- see the scan/skillValidation comment above).
+  //
+  // While searching, both groups are in play (so Import/Resume Health/Skill
+  // Validation stay findable even though they're not in the default list
+  // below) and every match shows, unpaginated -- narrowing what's already a
+  // deliberate search result would be a second, confusing filter on top of
+  // the first. Only the unfiltered default view caps the list length.
+  const profileItems = useMemo(
+    () => filteredSectionItems.filter((i) => i.group === "Profile"),
+    [filteredSectionItems]
+  );
+  const visibleProfileItems = useMemo(
+    () => (isSearching || sectionsExpanded ? profileItems : profileItems.slice(0, DEFAULT_VISIBLE_SECTION_COUNT)),
+    [profileItems, isSearching, sectionsExpanded]
+  );
+  const hiddenSectionCount = profileItems.length - visibleProfileItems.length;
+
   const sidebarNode = useMemo(
     () => (
       <>
@@ -255,17 +287,36 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
           value={sectionSearch}
           onChange={(e) => setSectionSearch(e.target.value)}
         />
-        {["Insights", "Profile"].map((group) => {
-          const items = filteredSectionItems.filter((i) => i.group === group);
-          if (items.length === 0) return null;
-          return (
-            <div key={group}>
-              <div className="section-nav-label-group">{group}</div>
-              <SectionNav items={items} activeId={activeSectionId} onSelect={setActiveSectionId} />
+        {isSearching &&
+          filteredSectionItems.some((i) => i.group === "Insights") && (
+            <div>
+              <div className="section-nav-label-group">Insights</div>
+              <SectionNav
+                items={filteredSectionItems.filter((i) => i.group === "Insights")}
+                activeId={activeSectionId}
+                onSelect={setActiveSectionId}
+              />
             </div>
-          );
-        })}
-        {filteredSectionItems.length === 0 && <p className="status section-search-empty">No sections match.</p>}
+          )}
+        {visibleProfileItems.length > 0 && (
+          <div>
+            <div className="section-nav-label-group">Profile</div>
+            <SectionNav items={visibleProfileItems} activeId={activeSectionId} onSelect={setActiveSectionId} />
+          </div>
+        )}
+        {!isSearching && hiddenSectionCount > 0 && (
+          <button type="button" className="section-nav-show-more" onClick={() => setSectionsExpanded(true)}>
+            Show {hiddenSectionCount} more
+          </button>
+        )}
+        {!isSearching && sectionsExpanded && (
+          <button type="button" className="section-nav-show-more" onClick={() => setSectionsExpanded(false)}>
+            Show less
+          </button>
+        )}
+        {isSearching && filteredSectionItems.length === 0 && (
+          <p className="status section-search-empty">No sections match.</p>
+        )}
 
         {scan && (
           <div className="sidebar-score-widget">
@@ -283,7 +334,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         )}
       </>
     ),
-    [activeSectionId, sectionSearch, filteredSectionItems, scan]
+    [activeSectionId, sectionSearch, filteredSectionItems, isSearching, visibleProfileItems, hiddenSectionCount, sectionsExpanded, scan]
   );
   useSetSidebar(sidebarNode);
 
@@ -478,7 +529,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
                 className="secondary"
                 onClick={() => handleGetAiFeedback()}
                 disabled={!aiModeEnabled || aiHealthStatus === "loading"}
-                title={aiModeEnabled ? undefined : "Switch to AI Mode in the header to use this"}
+                title={aiModeEnabled ? undefined : "Switch to AI Mode in Settings to use this"}
               >
                 {aiHealthStatus === "loading" ? "Getting AI feedback…" : "Get AI writing feedback"}
               </button>
