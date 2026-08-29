@@ -3,11 +3,12 @@ import type { LlmProvider } from "./types.js";
 import { anthropicProvider } from "./providers/anthropic.js";
 import { openaiProvider } from "./providers/openai.js";
 import { geminiProvider } from "./providers/gemini.js";
+import { localProvider } from "./providers/local.js";
 import { completeWithFailover } from "./orchestrator.js";
 import { buildJdEnhanceRequest } from "./jdEnhancePrompt.js";
 import { parseLlmJdAnalysis, mergeLlmJdAnalysis } from "./jdEnhanceSchema.js";
 
-const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider];
+const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider, localProvider];
 
 export interface LlmJdEnhanceResult {
   requirements: ExtractedRequirements;

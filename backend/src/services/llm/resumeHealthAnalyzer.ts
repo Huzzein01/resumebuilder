@@ -4,11 +4,12 @@ import type { LlmProvider } from "./types.js";
 import { anthropicProvider } from "./providers/anthropic.js";
 import { openaiProvider } from "./providers/openai.js";
 import { geminiProvider } from "./providers/gemini.js";
+import { localProvider } from "./providers/local.js";
 import { completeWithFailover } from "./orchestrator.js";
 import { buildResumeHealthRequest, type ResumeHealthPromptInput } from "./resumeHealthPrompt.js";
 import { parseLlmResumeHealth } from "./resumeHealthSchema.js";
 
-const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider];
+const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider, localProvider];
 
 export interface LlmResumeHealthResult {
   strengths: string[];

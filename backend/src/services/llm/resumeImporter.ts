@@ -3,6 +3,7 @@ import type { LlmProvider } from "./types.js";
 import { anthropicProvider } from "./providers/anthropic.js";
 import { openaiProvider } from "./providers/openai.js";
 import { geminiProvider } from "./providers/gemini.js";
+import { localProvider } from "./providers/local.js";
 import { completeWithFailover } from "./orchestrator.js";
 import { buildResumeImportRequest } from "./resumeImportPrompt.js";
 import { parseLlmProfileDraft } from "./schemas.js";
@@ -12,7 +13,7 @@ import { parseLlmProfileDraft } from "./schemas.js";
 // tried automatically. `providers` is a parameter (not a hardcoded import
 // inside the function) specifically so tests can inject mocks instead of
 // making real network calls.
-const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider];
+const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider, localProvider];
 
 export interface LlmResumeImportResult {
   draft: ProfileDraft;
