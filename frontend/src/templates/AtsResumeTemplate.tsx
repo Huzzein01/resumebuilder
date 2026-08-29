@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 import type { TailoredResume, SimpleEntry } from "@resumebuilder/shared";
 import { resolveSectionOrder, type ResumeSectionId } from "@resumebuilder/shared";
 import RichText from "../components/RichText.js";
@@ -271,8 +271,18 @@ export function createAtsTemplate(variant: string): ComponentType<Props> {
       );
     }
 
+    // Undefined values are omitted from the style object entirely (React
+    // drops them), so an unset fontFamily/fontSize leaves the variant's own
+    // CSS (singleColumnResume.css, keyed on data-variant) fully in control --
+    // this only overrides typography the user deliberately picked in the
+    // toolbar.
+    const fontOverride: CSSProperties = {
+      ...(resume.fontFamily ? { fontFamily: resume.fontFamily } : {}),
+      ...(resume.fontSize ? { fontSize: `${resume.fontSize}pt` } : {}),
+    };
+
     return (
-      <div className="resume-doc resume-print-root" data-variant={variant}>
+      <div className="resume-doc resume-print-root" data-variant={variant} style={fontOverride}>
         <header className="resume-header">
           <div className="resume-name">{contact.name || "Your Name"}</div>
           {contactLine && <div className="resume-contact-line">{contactLine}</div>}

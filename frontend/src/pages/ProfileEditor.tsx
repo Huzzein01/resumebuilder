@@ -460,10 +460,33 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
     };
   });
 
+  // Same latest-ref pattern as aiReviewRef/reorderSectionsRef above, same
+  // reason: profile?.fontFamily/profile?.fontSize are undefined both before
+  // the profile loads and while no override is set, so adding them to
+  // subHeaderNode's memo deps wouldn't recompute the memo across that
+  // null -> loaded transition -- the onChange closures below would keep
+  // referencing the initial (null) profile forever, silently no-op'ing
+  // every font/size change.
+  const fontChangeRef = useRef<{ family: (v: string | undefined) => void; size: (v: number | undefined) => void }>({
+    family: () => {},
+    size: () => {},
+  });
+  useEffect(() => {
+    fontChangeRef.current = {
+      family: (fontFamily) => profile && setProfile({ ...profile, fontFamily }),
+      size: (fontSize) => profile && setProfile({ ...profile, fontSize }),
+    };
+  });
+
   const subHeaderNode = useMemo(
     () => (
       <>
-        <EditorToolbar />
+        <EditorToolbar
+          fontFamily={profile?.fontFamily}
+          fontSize={profile?.fontSize}
+          onChangeFontFamily={(fontFamily) => fontChangeRef.current.family(fontFamily)}
+          onChangeFontSize={(fontSize) => fontChangeRef.current.size(fontSize)}
+        />
         <EditorQuickActions
           templateId={templateId}
           onSelectTemplate={setTemplateId}
@@ -475,7 +498,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         />
       </>
     ),
-    [templateId, previewCollapsed]
+    [templateId, previewCollapsed, profile?.fontFamily, profile?.fontSize]
   );
   useSetSubHeader(subHeaderNode);
 

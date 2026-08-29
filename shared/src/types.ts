@@ -103,6 +103,10 @@ export interface Profile {
   title?: string;
   /** User-customized resume section order (drag-to-reorder in the editor sidebar) -- ids from RESUME_SECTION_ORDER in resumeSectionOrder.ts. Optional/possibly-partial; resolveSectionOrder() fills in any missing ids in their default position. */
   sectionOrder?: string[];
+  /** Document-wide font family override, chosen from the toolbar's font picker (RESUME_FONT_FAMILIES in resumeFonts.ts). Undefined/empty means "use the selected template's own typography" -- most templates (Modern Serif, Technical, ...) are defined by their font choice, so this only overrides when the user deliberately picks one. */
+  fontFamily?: string;
+  /** Document-wide base font size in points, from the toolbar's size picker. Undefined means "use the template's default size". */
+  fontSize?: number;
   contact: ContactInfo;
   summary: string;
   workExperience: WorkExperience[];
@@ -288,6 +292,9 @@ export interface TailoredResume {
   references: ReferenceEntry[];
   /** Custom section render order (ids from RESUME_SECTION_ORDER in resumeSectionOrder.ts) -- carried through from Profile so the preview/export order matches exactly what the user dragged in the editor. Missing/undefined falls back to the default order. */
   sectionOrder?: string[];
+  /** Carried through from Profile.fontFamily/fontSize -- see there. */
+  fontFamily?: string;
+  fontSize?: number;
 }
 
 export interface ResumeVersion {

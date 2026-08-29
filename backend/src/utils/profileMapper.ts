@@ -8,6 +8,8 @@ export function toProfile(doc: any): Profile {
     // saved before this field existed won't have it at all.
     title: obj.title ?? "Master Profile",
     sectionOrder: obj.sectionOrder ?? [],
+    fontFamily: obj.fontFamily ?? undefined,
+    fontSize: obj.fontSize ?? undefined,
     contact: obj.contact,
     summary: obj.summary ?? "",
     workExperience: obj.workExperience,

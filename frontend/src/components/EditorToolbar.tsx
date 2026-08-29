@@ -1,4 +1,16 @@
 import { useEffect, useState } from "react";
+import { RESUME_FONT_FAMILIES, RESUME_FONT_SIZES, DEFAULT_RESUME_FONT_SIZE } from "@resumebuilder/shared";
+
+interface EditorToolbarProps {
+  /** Document-wide font family/size, applied to the whole resume (both the
+      live preview and PDF export) -- distinct from Bold/Italic/Underline,
+      which format only the selected text within one rich-text field. Both
+      undefined means "use the selected template's own typography". */
+  fontFamily?: string;
+  fontSize?: number;
+  onChangeFontFamily: (value: string | undefined) => void;
+  onChangeFontSize: (value: number | undefined) => void;
+}
 
 /**
  * Rich-text formatting toolbar -- acts on whatever text is currently
@@ -19,7 +31,12 @@ import { useEffect, useState } from "react";
  * inline comments/annotations -- a real feature (threads, persistence,
  * resolution), not a toolbar button; not built in this pass.
  */
-export default function EditorToolbar() {
+export default function EditorToolbar({
+  fontFamily,
+  fontSize,
+  onChangeFontFamily,
+  onChangeFontSize,
+}: EditorToolbarProps) {
   const [richTextFocused, setRichTextFocused] = useState(false);
 
   useEffect(() => {
@@ -86,6 +103,36 @@ export default function EditorToolbar() {
       >
         ↻
       </button>
+      <span className="editor-toolbar-divider" aria-hidden="true" />
+      <select
+        className="editor-toolbar-font-select"
+        aria-label="Document font"
+        title="Document font -- applies to the whole resume"
+        value={fontFamily ?? ""}
+        onChange={(e) => onChangeFontFamily(e.target.value || undefined)}
+      >
+        <option value="">Default font</option>
+        {RESUME_FONT_FAMILIES.map((f) => (
+          <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+      <select
+        className="editor-toolbar-size-select"
+        aria-label="Document font size"
+        title="Document font size (pt) -- applies to the whole resume"
+        value={fontSize ?? ""}
+        onChange={(e) => onChangeFontSize(e.target.value ? Number(e.target.value) : undefined)}
+      >
+        <option value="">Default size</option>
+        {RESUME_FONT_SIZES.map((size) => (
+          <option key={size} value={size}>
+            {size}
+            {size === DEFAULT_RESUME_FONT_SIZE ? " pt (default)" : " pt"}
+          </option>
+        ))}
+      </select>
       <span className="editor-toolbar-divider" aria-hidden="true" />
       <button
         type="button"

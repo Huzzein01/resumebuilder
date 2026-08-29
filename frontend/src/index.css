@@ -754,6 +754,27 @@ button.danger:hover {
   border-color: var(--line);
 }
 
+.editor-toolbar-font-select,
+.editor-toolbar-size-select {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-control);
+  padding: 5px 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 140px;
+}
+
+.editor-toolbar-size-select {
+  max-width: 96px;
+}
+
+.editor-toolbar-font-select:hover,
+.editor-toolbar-size-select:hover {
+  border-color: var(--ink);
+}
+
 .editor-toolbar-bold {
   font-weight: 700;
 }

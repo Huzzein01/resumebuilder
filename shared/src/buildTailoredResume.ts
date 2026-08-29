@@ -73,6 +73,8 @@ export function buildTailoredResume(profile: Profile, selection: SelectionState)
     testScores: profile.testScores,
     references: profile.references,
     sectionOrder: profile.sectionOrder,
+    fontFamily: profile.fontFamily,
+    fontSize: profile.fontSize,
   };
 }
 
@@ -123,5 +125,7 @@ export function buildFullResume(profile: Profile): TailoredResume {
     testScores: profile.testScores,
     references: profile.references,
     sectionOrder: profile.sectionOrder,
+    fontFamily: profile.fontFamily,
+    fontSize: profile.fontSize,
   };
 }

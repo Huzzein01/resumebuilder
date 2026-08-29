@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { TailoredResume, SimpleEntry } from "@resumebuilder/shared";
 import { resolveSectionOrder, type ResumeSectionId } from "@resumebuilder/shared";
 import RichText from "../components/RichText.js";
@@ -260,8 +260,15 @@ export default function ModernSidebarResume({ resume }: Props) {
   const sidebarOrder = order.filter((id) => SIDEBAR_SECTION_IDS.includes(id));
   const mainOrder = order.filter((id) => !SIDEBAR_SECTION_IDS.includes(id));
 
+  // Same override mechanism as AtsResumeTemplate -- see its fontOverride
+  // comment.
+  const fontOverride: CSSProperties = {
+    ...(resume.fontFamily ? { fontFamily: resume.fontFamily } : {}),
+    ...(resume.fontSize ? { fontSize: `${resume.fontSize}pt` } : {}),
+  };
+
   return (
-    <div className="ms-resume-doc resume-print-root">
+    <div className="ms-resume-doc resume-print-root" style={fontOverride}>
       <aside className="ms-sidebar">
         <div className="ms-name">{contact.name || "Your Name"}</div>
         <div className="ms-sidebar-section">

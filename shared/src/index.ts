@@ -10,3 +10,4 @@ export * from "./skillValidator.js";
 export * from "./richText.js";
 export * from "./resumeTemplates.js";
 export * from "./resumeSectionOrder.js";
+export * from "./resumeFonts.js";

@@ -97,6 +97,8 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
   const {
     title,
     sectionOrder,
+    fontFamily,
+    fontSize,
     contact,
     summary,
     workExperience,
@@ -126,6 +128,12 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
     {
       title: title?.trim() || "Master Profile",
       sectionOrder: Array.isArray(sectionOrder) ? sectionOrder : [],
+      // null (not undefined) when unset -- Mongoose drops undefined keys from
+      // the update doc entirely, which would leave a previously-saved value
+      // stuck forever; null explicitly clears it back to "use the template's
+      // default typography" when the user picks the toolbar's Default option.
+      fontFamily: typeof fontFamily === "string" && fontFamily.trim() ? fontFamily : null,
+      fontSize: typeof fontSize === "number" && Number.isFinite(fontSize) ? fontSize : null,
       contact,
       summary,
       workExperience,

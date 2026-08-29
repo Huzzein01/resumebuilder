@@ -2,6 +2,12 @@
   background: #ffffff;
   color: #000000;
   font-family: Georgia, "Times New Roman", Times, serif;
+  /* Base for every child's em-based font-size below -- 12pt matches the
+     browser's 16px root that these were all originally sized against as
+     rem, so the default (un-overridden) look is unchanged. The toolbar's
+     font-size picker overrides this inline (see AtsResumeTemplate's
+     fontOverride), scaling every child size with it since they're all em. */
+  font-size: 12pt;
   max-width: 700px;
   margin: 0 auto;
   padding: 40px;
@@ -14,13 +20,13 @@
 }
 
 .resume-name {
-  font-size: 1.6rem;
+  font-size: 1.6em;
   font-weight: bold;
   margin-bottom: 4px;
 }
 
 .resume-contact-line {
-  font-size: 0.85rem;
+  font-size: 0.85em;
   margin: 2px 0;
 }
 
@@ -29,7 +35,7 @@
 }
 
 .resume-section-title {
-  font-size: 1rem;
+  font-size: 1em;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -39,11 +45,11 @@
 }
 
 .resume-skills-line {
-  font-size: 0.9rem;
+  font-size: 0.9em;
 }
 
 .resume-summary {
-  font-size: 0.9rem;
+  font-size: 0.9em;
   margin: 0;
 }
 
@@ -55,7 +61,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font-size: 0.95rem;
+  font-size: 0.95em;
 }
 
 .resume-entry-title {
@@ -69,7 +75,7 @@
 
 .resume-tech-stack {
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: 0.85em;
   margin: 2px 0 4px;
 }
 
@@ -79,14 +85,14 @@
 }
 
 .resume-bullet {
-  font-size: 0.9rem;
+  font-size: 0.9em;
   margin-bottom: 2px;
 }
 
 .resume-numbered-list {
   margin: 4px 0 0;
   padding-left: 20px;
-  font-size: 0.9rem;
+  font-size: 0.9em;
 }
 
 .resume-numbered-list li {
@@ -107,13 +113,13 @@
   text-align: left;
 }
 .resume-doc[data-variant="minimal-sans"] .resume-name {
-  font-size: 1.5rem;
+  font-size: 1.5em;
   font-weight: 600;
 }
 .resume-doc[data-variant="minimal-sans"] .resume-section-title {
   text-transform: none;
   letter-spacing: normal;
-  font-size: 0.95rem;
+  font-size: 0.95em;
   font-weight: 700;
   border-bottom: 1px solid #cccccc;
   color: #333333;
@@ -127,7 +133,7 @@
   font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
 }
 .resume-doc[data-variant="modern-serif"] .resume-name {
-  font-size: 1.7rem;
+  font-size: 1.7em;
   letter-spacing: 0.02em;
 }
 .resume-doc[data-variant="modern-serif"] .resume-section-title {
@@ -151,7 +157,7 @@
   text-align: left;
 }
 .resume-doc[data-variant="bold-header"] .resume-name {
-  font-size: 1.7rem;
+  font-size: 1.7em;
 }
 .resume-doc[data-variant="bold-header"] .resume-section {
   padding: 0 40px;
@@ -172,13 +178,13 @@
   line-height: 1.3;
 }
 .resume-doc[data-variant="compact"] .resume-name {
-  font-size: 1.35rem;
+  font-size: 1.35em;
 }
 .resume-doc[data-variant="compact"] .resume-section {
   margin-bottom: 10px;
 }
 .resume-doc[data-variant="compact"] .resume-section-title {
-  font-size: 0.88rem;
+  font-size: 0.88em;
   margin-bottom: 5px;
 }
 .resume-doc[data-variant="compact"] .resume-entry {
@@ -187,7 +193,7 @@
 .resume-doc[data-variant="compact"] .resume-bullet,
 .resume-doc[data-variant="compact"] .resume-summary,
 .resume-doc[data-variant="compact"] .resume-skills-line {
-  font-size: 0.82rem;
+  font-size: 0.82em;
 }
 
 /* Executive: formal Times New Roman, small-caps name, traditional double rule. */
@@ -197,7 +203,7 @@
 .resume-doc[data-variant="executive"] .resume-name {
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 1.4rem;
+  font-size: 1.4em;
 }
 .resume-doc[data-variant="executive"] .resume-header {
   border-bottom: 3px double #000000;
@@ -213,7 +219,7 @@
 }
 .resume-doc[data-variant="technical"] .resume-name {
   font-family: "Consolas", "Courier New", monospace;
-  font-size: 1.4rem;
+  font-size: 1.4em;
 }
 .resume-doc[data-variant="technical"] .resume-section-title {
   font-family: "Consolas", "Courier New", monospace;
@@ -225,5 +231,5 @@
 .resume-doc[data-variant="technical"] .resume-entry-dates {
   font-family: "Consolas", "Courier New", monospace;
   font-style: normal;
-  font-size: 0.82rem;
+  font-size: 0.82em;
 }
