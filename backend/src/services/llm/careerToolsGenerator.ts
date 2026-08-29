@@ -1,19 +1,14 @@
 import { randomUUID } from "node:crypto";
 import type { CareerToolInsight } from "@resumebuilder/shared";
 import type { LlmProvider } from "./types.js";
-import { anthropicProvider } from "./providers/anthropic.js";
-import { openaiProvider } from "./providers/openai.js";
-import { geminiProvider } from "./providers/gemini.js";
-import { localProvider } from "./providers/local.js";
-import { completeWithFailover } from "./orchestrator.js";
+import { complete } from "./client.js";
 import { buildCareerToolsRequest, type CareerToolsPromptInput } from "./careerToolsPrompt.js";
 import { parseLlmCareerTools } from "./careerToolsSchema.js";
-
-const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider, localProvider];
 
 export interface CareerToolsGenerationResult {
   insights: CareerToolInsight[];
   providerName: string;
+  model: string;
 }
 
 /**
@@ -25,15 +20,19 @@ export interface CareerToolsGenerationResult {
  */
 export async function generateCareerToolInsights(
   input: CareerToolsPromptInput,
-  providers: LlmProvider[] = DEFAULT_PROVIDERS
+  provider?: LlmProvider
 ): Promise<CareerToolsGenerationResult> {
   const request = buildCareerToolsRequest(input);
-  const { result, providerName } = await completeWithFailover(providers, request, parseLlmCareerTools);
+  const { result, providerName, model } = await complete(
+    { ...request, feature: `careerTool:${input.kind}` },
+    parseLlmCareerTools,
+    provider
+  );
 
   const insights: CareerToolInsight[] = result.insights
     .filter((text) => text.trim().length > 0)
     .slice(0, 6)
     .map((message) => ({ id: randomUUID(), message }));
 
-  return { insights, providerName };
+  return { insights, providerName, model };
 }

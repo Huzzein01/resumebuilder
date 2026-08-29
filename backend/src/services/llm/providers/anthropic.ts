@@ -10,6 +10,10 @@ export const anthropicProvider: LlmProvider = {
     return !!process.env.ANTHROPIC_API_KEY;
   },
 
+  activeModel(): string {
+    return process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
+  },
+
   async complete({ systemPrompt, userPrompt, maxOutputTokens }: LlmCompletionRequest): Promise<string> {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -22,7 +26,7 @@ export const anthropicProvider: LlmProvider = {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL,
+        model: this.activeModel(),
         max_tokens: maxOutputTokens,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],

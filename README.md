@@ -44,6 +44,60 @@ Copy `backend/.env.example` to `backend/.env` to override `PORT`,
 `MONGODB_URI`, or `FRONTEND_URL` (used by the PDF/DOCX export routes to know
 where to render the print view from).
 
+## AI provider
+
+The editor's four AI features — AI Review, LinkedIn Optimizer, Question
+Generator, and AI Cover Letter — all call one internal interface
+(`backend/src/services/llm/features.ts`), and which model actually answers
+is chosen entirely by the `AI_PROVIDER` environment variable. No call site
+anywhere in the app names a provider, so switching is a config change, never
+a code change.
+
+**Local development (default, zero cost):**
+
+1. [Install Ollama](https://ollama.com/download).
+2. Pull a model: `ollama pull llama3.1` (any Ollama model works — a smaller
+   one like `llama3.1:8b` is fine for iterating on prompts, a larger one
+   gives better output quality).
+3. Make sure Ollama is running (`ollama serve`, or it's already running as a
+   background service on most installs).
+4. In `backend/.env`:
+   ```
+   AI_PROVIDER=ollama
+   OLLAMA_BASE_URL=http://localhost:11434
+   OLLAMA_MODEL=llama3.1
+   ```
+   (`AI_PROVIDER=ollama` is the default even if unset — this is only needed
+   if you're overriding the model or base URL.)
+5. Run the backend as usual (`npm run dev:backend`). Every AI feature now
+   calls your local model, at no cost.
+
+If Ollama isn't running, calls fail with a specific error rather than a
+generic crash: `Can't reach Ollama at http://localhost:11434 — is it
+running?`. If the model isn't pulled, you get a similarly specific error
+telling you to `ollama pull <model>`.
+
+**Manual testing:** `GET /api/ai-debug` reports the active provider/model
+without calling it; `GET /api/ai-debug/:feature` (`review-resume`,
+`linkedin`, `interview-questions`, or `cover-letter`) runs that feature
+end-to-end against a small fixed fixture and returns the provider, model,
+latency, and result — useful for comparing output quality across providers
+by just flipping `AI_PROVIDER` and re-running the same request. Dev-only,
+not mounted when `NODE_ENV=production`.
+
+**Going to production:** set `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY`
+(and optionally `ANTHROPIC_MODEL`, default `claude-3-5-sonnet-20241022`).
+That's the entire change — no code touches a provider name directly. If
+`AI_PROVIDER=anthropic` is set without a key, the app fails fast with a
+clear error at call time rather than silently falling back to Ollama or any
+other provider.
+
+`openai` and `gemini` are also selectable via `AI_PROVIDER` (adapters
+already exist, using `OPENAI_API_KEY`/`GEMINI_API_KEY`) if you'd rather use
+one of those instead of Anthropic.
+
+See `backend/.env.example` for the full list of variables.
+
 ## Tests
 
 ```bash

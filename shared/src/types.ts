@@ -360,6 +360,8 @@ export interface ResumeHealthAiResult {
   suggestions: AiResumeSuggestion[];
   method: "llm" | "unavailable";
   provider?: string;
+  /** The exact model id that produced this, e.g. "llama3.1" or "claude-3-5-sonnet-20241022" -- lets output be compared across providers without digging through logs. */
+  model?: string;
 }
 
 /**
@@ -387,4 +389,5 @@ export interface CareerToolResult {
   insights: CareerToolInsight[];
   method: "llm" | "unavailable";
   provider?: string;
+  model?: string;
 }

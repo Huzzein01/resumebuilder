@@ -66,13 +66,13 @@ function relevantBulletsFor(profile: Profile, selection: SelectionState): string
 async function resolveLetter(
   req: Request,
   context: CoverLetterContext
-): Promise<{ letter: CoverLetterContent; method: "llm" | "deterministic"; provider?: string }> {
+): Promise<{ letter: CoverLetterContent; method: "llm" | "deterministic"; provider?: string; model?: string }> {
   const { profile, jobDescription, requirements, selection, companyName, hiringManagerName } = context;
   const relevance = scoreProfile(profile, requirements);
 
   if (isAiCoverLetterRequested(req)) {
     try {
-      const { letter, providerName } = await generateCoverLetterWithLlm({
+      const { letter, providerName, model } = await generateCoverLetterWithLlm({
         contact: profile.contact,
         jobTitle: jobDescription.requirements.title,
         companyName,
@@ -80,7 +80,7 @@ async function resolveLetter(
         matchedSkills: relevance.matchedMustHave,
         relevantBullets: relevantBulletsFor(profile, selection),
       });
-      return { letter, method: "llm", provider: providerName };
+      return { letter, method: "llm", provider: providerName, model };
     } catch (err) {
       console.error("LLM cover letter generation failed, falling back to the templated version:", err);
     }

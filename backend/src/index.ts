@@ -11,6 +11,7 @@ import selectionRoutes from "./routes/selectionRoutes.js";
 import resumeVersionRoutes from "./routes/resumeVersionRoutes.js";
 import coverLetterRoutes from "./routes/coverLetterRoutes.js";
 import careerToolsRoutes from "./routes/careerToolsRoutes.js";
+import aiDebugRoutes from "./routes/aiDebugRoutes.js";
 
 const app = express();
 
@@ -63,6 +64,13 @@ app.use("/api/selection", selectionRoutes);
 app.use("/api/resume-versions", resumeVersionRoutes);
 app.use("/api/resume-versions", coverLetterRoutes);
 app.use("/api/career-tools", careerToolsRoutes);
+
+// Dev-only: runs uncapped model calls against whichever provider
+// AI_PROVIDER selects, with no auth. Useful on a dev box for comparing
+// providers; not something to expose on a public URL.
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api/ai-debug", aiDebugRoutes);
+}
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });

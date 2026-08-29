@@ -1,19 +1,14 @@
 import type { ExtractedRequirements } from "@resumebuilder/shared";
 import type { LlmProvider } from "./types.js";
-import { anthropicProvider } from "./providers/anthropic.js";
-import { openaiProvider } from "./providers/openai.js";
-import { geminiProvider } from "./providers/gemini.js";
-import { localProvider } from "./providers/local.js";
-import { completeWithFailover } from "./orchestrator.js";
+import { complete } from "./client.js";
 import { buildJdEnhanceRequest } from "./jdEnhancePrompt.js";
 import { parseLlmJdAnalysis, mergeLlmJdAnalysis } from "./jdEnhanceSchema.js";
-
-const DEFAULT_PROVIDERS: LlmProvider[] = [anthropicProvider, openaiProvider, geminiProvider, localProvider];
 
 export interface LlmJdEnhanceResult {
   requirements: ExtractedRequirements;
   additionalSkillsDetected: string[];
   providerName: string;
+  model: string;
 }
 
 /**
@@ -24,10 +19,14 @@ export interface LlmJdEnhanceResult {
 export async function enhanceRequirementsWithLlm(
   rawJdText: string,
   deterministic: ExtractedRequirements,
-  providers: LlmProvider[] = DEFAULT_PROVIDERS
+  provider?: LlmProvider
 ): Promise<LlmJdEnhanceResult> {
   const request = buildJdEnhanceRequest(rawJdText);
-  const { result, providerName } = await completeWithFailover(providers, request, parseLlmJdAnalysis);
+  const { result, providerName, model } = await complete(
+    { ...request, feature: "enhanceJobDescription" },
+    parseLlmJdAnalysis,
+    provider
+  );
   const { requirements, additionalSkillsDetected } = mergeLlmJdAnalysis(deterministic, result);
-  return { requirements, additionalSkillsDetected, providerName };
+  return { requirements, additionalSkillsDetected, providerName, model };
 }

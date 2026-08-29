@@ -10,6 +10,10 @@ export const openaiProvider: LlmProvider = {
     return !!process.env.OPENAI_API_KEY;
   },
 
+  activeModel(): string {
+    return process.env.OPENAI_MODEL ?? DEFAULT_MODEL;
+  },
+
   async complete({ systemPrompt, userPrompt, maxOutputTokens }: LlmCompletionRequest): Promise<string> {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) throw new Error("OPENAI_API_KEY is not set");
@@ -21,7 +25,7 @@ export const openaiProvider: LlmProvider = {
         authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL ?? DEFAULT_MODEL,
+        model: this.activeModel(),
         max_tokens: maxOutputTokens,
         response_format: { type: "json_object" },
         messages: [

@@ -10,11 +10,15 @@ export const geminiProvider: LlmProvider = {
     return !!(process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY);
   },
 
+  activeModel(): string {
+    return process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
+  },
+
   async complete({ systemPrompt, userPrompt, maxOutputTokens }: LlmCompletionRequest): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY ?? process.env.GOOGLE_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
-    const model = process.env.GEMINI_MODEL ?? DEFAULT_MODEL;
+    const model = this.activeModel();
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {

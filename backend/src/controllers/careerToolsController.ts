@@ -45,7 +45,7 @@ export async function getCareerToolInsights(req: Request, res: Response): Promis
   const companyName = typeof body.companyName === "string" ? body.companyName : undefined;
 
   try {
-    const { insights, providerName } = await generateCareerToolInsights({
+    const { insights, providerName, model } = await generateCareerToolInsights({
       kind,
       summary: stripRichText(profile.summary),
       skills: profile.skills.map((s) => s.name),
@@ -54,7 +54,7 @@ export async function getCareerToolInsights(req: Request, res: Response): Promis
       jobDescription,
       companyName,
     });
-    const result: CareerToolResult = { kind, insights, method: "llm", provider: providerName };
+    const result: CareerToolResult = { kind, insights, method: "llm", provider: providerName, model };
     res.json(result);
   } catch (err) {
     console.error(`LLM career tool "${kind}" failed:`, err);

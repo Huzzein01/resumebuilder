@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 import { generateCoverLetterWithLlm } from "./coverLetterGenerator.js";
-import { LlmUnavailableError } from "./types.js";
 import type { LlmProvider } from "./types.js";
 
 const VALID_JSON = JSON.stringify({
@@ -12,7 +11,7 @@ const VALID_JSON = JSON.stringify({
 const CONTACT = { name: "Jordan Lee", email: "jordan@example.com", phone: "", location: "", links: [] };
 
 function mockProvider(name: string, complete: LlmProvider["complete"], configured = true): LlmProvider {
-  return { name, isConfigured: () => configured, complete: vi.fn(complete) };
+  return { name, isConfigured: () => configured, activeModel: () => `${name}-model`, complete: vi.fn(complete) };
 }
 
 describe("generateCoverLetterWithLlm", () => {
@@ -28,7 +27,7 @@ describe("generateCoverLetterWithLlm", () => {
         matchedSkills: ["Node.js"],
         relevantBullets: ["Built a payments service handling millions of transactions"],
       },
-      [provider]
+      provider
     );
 
     expect(result.providerName).toBe("anthropic");
@@ -55,30 +54,30 @@ describe("generateCoverLetterWithLlm", () => {
 
     const result = await generateCoverLetterWithLlm(
       { contact: CONTACT, companyName: "Acme", matchedSkills: [], relevantBullets: [] },
-      [provider]
+      provider
     );
 
     expect(result.letter.contact).toEqual(CONTACT);
     expect(result.letter.companyName).toBe("Acme");
   });
 
-  it("propagates LlmUnavailableError when no provider is configured", async () => {
-    const unconfigured = mockProvider("unconfigured", async () => VALID_JSON, false);
+  it("propagates the error when the provider returns malformed JSON", async () => {
+    const broken = mockProvider("broken", async () => "not json");
 
     await expect(
-      generateCoverLetterWithLlm({ contact: CONTACT, matchedSkills: [], relevantBullets: [] }, [unconfigured])
-    ).rejects.toThrow(LlmUnavailableError);
+      generateCoverLetterWithLlm({ contact: CONTACT, matchedSkills: [], relevantBullets: [] }, broken)
+    ).rejects.toThrow();
   });
 
-  it("falls through to the next provider on malformed JSON", async () => {
-    const broken = mockProvider("broken", async () => "not json");
-    const working = mockProvider("working", async () => VALID_JSON);
+  it("reports the provider and model that produced the result", async () => {
+    const provider = mockProvider("ollama", async () => VALID_JSON);
 
     const result = await generateCoverLetterWithLlm(
       { contact: CONTACT, matchedSkills: [], relevantBullets: [] },
-      [broken, working]
+      provider
     );
 
-    expect(result.providerName).toBe("working");
+    expect(result.providerName).toBe("ollama");
+    expect(result.model).toBe("ollama-model");
   });
 });

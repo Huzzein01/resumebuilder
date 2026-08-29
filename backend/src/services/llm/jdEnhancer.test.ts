@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { ExtractedRequirements } from "@resumebuilder/shared";
 import { enhanceRequirementsWithLlm } from "./jdEnhancer.js";
-import { LlmUnavailableError } from "./types.js";
 import type { LlmProvider } from "./types.js";
 
 const DETERMINISTIC: ExtractedRequirements = {
@@ -19,14 +18,14 @@ const VALID_JSON = JSON.stringify({
 });
 
 function mockProvider(name: string, complete: LlmProvider["complete"], configured = true): LlmProvider {
-  return { name, isConfigured: () => configured, complete: vi.fn(complete) };
+  return { name, isConfigured: () => configured, activeModel: () => `${name}-model`, complete: vi.fn(complete) };
 }
 
 describe("enhanceRequirementsWithLlm", () => {
   it("merges the LLM's analysis into the deterministic requirements", async () => {
     const provider = mockProvider("anthropic", async () => VALID_JSON);
 
-    const result = await enhanceRequirementsWithLlm("some JD text", DETERMINISTIC, [provider]);
+    const result = await enhanceRequirementsWithLlm("some JD text", DETERMINISTIC, provider);
 
     expect(result.providerName).toBe("anthropic");
     expect(result.requirements.mustHaveSkills.map((s) => s.name)).toEqual(["React"]);
@@ -35,21 +34,19 @@ describe("enhanceRequirementsWithLlm", () => {
     expect(result.requirements.title).toBe("Backend Engineer");
   });
 
-  it("falls through to the next provider when the first returns malformed JSON", async () => {
+  it("propagates the error when the provider returns malformed JSON", async () => {
     const broken = mockProvider("broken", async () => "not json");
-    const working = mockProvider("working", async () => VALID_JSON);
 
-    const result = await enhanceRequirementsWithLlm("JD text", DETERMINISTIC, [broken, working]);
-
-    expect(result.providerName).toBe("working");
+    await expect(enhanceRequirementsWithLlm("JD text", DETERMINISTIC, broken)).rejects.toThrow();
   });
 
-  it("propagates LlmUnavailableError when no provider is configured", async () => {
-    const unconfigured = mockProvider("unconfigured", async () => VALID_JSON, false);
+  it("reports the provider and model that produced the result", async () => {
+    const provider = mockProvider("ollama", async () => VALID_JSON);
 
-    await expect(enhanceRequirementsWithLlm("JD text", DETERMINISTIC, [unconfigured])).rejects.toThrow(
-      LlmUnavailableError
-    );
+    const result = await enhanceRequirementsWithLlm("JD text", DETERMINISTIC, provider);
+
+    expect(result.providerName).toBe("ollama");
+    expect(result.model).toBe("ollama-model");
   });
 
   it("does not touch a deterministic result that already found everything", async () => {
@@ -62,7 +59,7 @@ describe("enhanceRequirementsWithLlm", () => {
     };
     const provider = mockProvider("anthropic", async () => VALID_JSON);
 
-    const result = await enhanceRequirementsWithLlm("JD text", alreadyComplete, [provider]);
+    const result = await enhanceRequirementsWithLlm("JD text", alreadyComplete, provider);
 
     expect(result.requirements.seniority.level).toBe("staff");
     expect(result.requirements.title).toBe("Principal Engineer");

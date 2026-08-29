@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { generateResumeHealthSuggestionsWithLlm } from "./resumeHealthAnalyzer.js";
-import { LlmUnavailableError } from "./types.js";
 import type { LlmProvider } from "./types.js";
 
 function mockProvider(name: string, complete: LlmProvider["complete"], configured = true): LlmProvider {
-  return { name, isConfigured: () => configured, complete: vi.fn(complete) };
+  return { name, isConfigured: () => configured, activeModel: () => `${name}-model`, complete: vi.fn(complete) };
 }
 
 const BULLETS = [{ id: "b1", text: "Built a payments service.", context: "\"Engineer\" at Acme" }];
@@ -28,7 +27,7 @@ describe("generateResumeHealthSuggestionsWithLlm", () => {
 
     const result = await generateResumeHealthSuggestionsWithLlm(
       { summary: "Engineer.", bullets: BULLETS, alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-      [provider]
+      provider
     );
 
     expect(result.providerName).toBe("anthropic");
@@ -48,7 +47,7 @@ describe("generateResumeHealthSuggestionsWithLlm", () => {
 
     const result = await generateResumeHealthSuggestionsWithLlm(
       { summary: "", bullets: BULLETS, alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-      [provider]
+      provider
     );
 
     expect(result.strengths).toEqual([
@@ -63,7 +62,7 @@ describe("generateResumeHealthSuggestionsWithLlm", () => {
 
     const result = await generateResumeHealthSuggestionsWithLlm(
       { summary: "", bullets: [], alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-      [provider]
+      provider
     );
 
     expect(result.strengths).toHaveLength(4);
@@ -79,7 +78,7 @@ describe("generateResumeHealthSuggestionsWithLlm", () => {
 
     const result = await generateResumeHealthSuggestionsWithLlm(
       { summary: "", bullets: BULLETS, alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-      [provider]
+      provider
     );
 
     expect(result.suggestions[0].targetType).toBe("general");
@@ -92,32 +91,32 @@ describe("generateResumeHealthSuggestionsWithLlm", () => {
 
     const result = await generateResumeHealthSuggestionsWithLlm(
       { summary: "", bullets: [], alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-      [provider]
+      provider
     );
 
     expect(result.suggestions).toHaveLength(5);
   });
 
-  it("propagates LlmUnavailableError when no provider is configured", async () => {
-    const unconfigured = mockProvider("unconfigured", async () => "{}", false);
+  it("propagates the error when the provider returns malformed JSON", async () => {
+    const broken = mockProvider("broken", async () => "not json");
 
     await expect(
       generateResumeHealthSuggestionsWithLlm(
         { summary: "", bullets: [], alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-        [unconfigured]
+        broken
       )
-    ).rejects.toThrow(LlmUnavailableError);
+    ).rejects.toThrow();
   });
 
-  it("falls through to the next provider on malformed JSON", async () => {
-    const broken = mockProvider("broken", async () => "not json");
-    const working = mockProvider("working", async () => JSON.stringify({ strengths: [], suggestions: [] }));
+  it("reports the provider and model that produced the result", async () => {
+    const provider = mockProvider("ollama", async () => JSON.stringify({ strengths: [], suggestions: [] }));
 
     const result = await generateResumeHealthSuggestionsWithLlm(
       { summary: "", bullets: [], alreadyFlaggedCategories: [], profileShape: PROFILE_SHAPE },
-      [broken, working]
+      provider
     );
 
-    expect(result.providerName).toBe("working");
+    expect(result.providerName).toBe("ollama");
+    expect(result.model).toBe("ollama-model");
   });
 });

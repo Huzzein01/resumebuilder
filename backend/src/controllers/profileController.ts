@@ -72,7 +72,7 @@ export async function getResumeHealthAi(req: Request, res: Response): Promise<vo
   ];
 
   try {
-    const { strengths, suggestions, providerName } = await generateResumeHealthSuggestionsWithLlm({
+    const { strengths, suggestions, providerName, model } = await generateResumeHealthSuggestionsWithLlm({
       summary: stripRichText(profile.summary),
       bullets,
       alreadyFlaggedCategories,
@@ -84,7 +84,7 @@ export async function getResumeHealthAi(req: Request, res: Response): Promise<vo
         certificationCount: profile.certifications.length,
       },
     });
-    const result: ResumeHealthAiResult = { strengths, suggestions, method: "llm", provider: providerName };
+    const result: ResumeHealthAiResult = { strengths, suggestions, method: "llm", provider: providerName, model };
     res.json(result);
   } catch (err) {
     console.error("LLM resume health suggestions failed:", err);

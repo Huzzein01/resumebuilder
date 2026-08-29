@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { generateCareerToolInsights } from "./careerToolsGenerator.js";
-import { LlmUnavailableError } from "./types.js";
 import type { LlmProvider } from "./types.js";
 
 function mockProvider(name: string, complete: LlmProvider["complete"], configured = true): LlmProvider {
-  return { name, isConfigured: () => configured, complete: vi.fn(complete) };
+  return { name, isConfigured: () => configured, activeModel: () => `${name}-model`, complete: vi.fn(complete) };
 }
 
 describe("generateCareerToolInsights", () => {
@@ -13,7 +12,7 @@ describe("generateCareerToolInsights", () => {
 
     const result = await generateCareerToolInsights(
       { kind: "career-path", summary: "Engineer.", skills: ["Node.js"], recentTitles: ["Backend Engineer"] },
-      [provider]
+      provider
     );
 
     expect(result.providerName).toBe("anthropic");
@@ -28,31 +27,33 @@ describe("generateCareerToolInsights", () => {
 
     const result = await generateCareerToolInsights(
       { kind: "interview-questions", summary: "", skills: [], recentTitles: [] },
-      [provider]
+      provider
     );
 
     expect(result.insights).toHaveLength(6);
   });
 
-  it("propagates LlmUnavailableError when no provider is configured", async () => {
-    const unconfigured = mockProvider("unconfigured", async () => "{}", false);
+  // Provider *selection* (and refusing to fall back to a different one) is
+  // config.ts's job now, covered in config.test.ts -- at this layer the
+  // contract is simply that a bad response surfaces rather than being
+  // silently retried against some other model.
+  it("propagates the error when the provider returns malformed JSON", async () => {
+    const broken = mockProvider("broken", async () => "not json");
 
     await expect(
-      generateCareerToolInsights({ kind: "linkedin-optimization", summary: "", skills: [], recentTitles: [] }, [
-        unconfigured,
-      ])
-    ).rejects.toThrow(LlmUnavailableError);
+      generateCareerToolInsights({ kind: "career-financials", summary: "", skills: [], recentTitles: [] }, broken)
+    ).rejects.toThrow();
   });
 
-  it("falls through to the next provider on malformed JSON", async () => {
-    const broken = mockProvider("broken", async () => "not json");
-    const working = mockProvider("working", async () => JSON.stringify({ insights: ["ok"] }));
+  it("reports the provider and model that produced the result", async () => {
+    const provider = mockProvider("ollama", async () => JSON.stringify({ insights: ["ok"] }));
 
     const result = await generateCareerToolInsights(
-      { kind: "career-financials", summary: "", skills: [], recentTitles: [] },
-      [broken, working]
+      { kind: "career-path", summary: "", skills: [], recentTitles: [] },
+      provider
     );
 
-    expect(result.providerName).toBe("working");
+    expect(result.providerName).toBe("ollama");
+    expect(result.model).toBe("ollama-model");
   });
 });
