@@ -1688,6 +1688,10 @@ section.form-section h3 {
 
 .wizard-nav-bar {
   flex: 1;
+  /* Without this, a flex item's default min-width: auto can still force it
+     wider than its equal 50% share to fit its content, undermining the
+     "same size" fix above even with matching flex-grow on both sides. */
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1704,11 +1708,11 @@ section.form-section h3 {
   transform: translateY(-1px);
 }
 
-.wizard-back-bar {
-  flex: 0 1 auto;
-  min-width: 200px;
-}
-
+/* Both bars are plain .wizard-nav-bar (flex: 1) with no extra override on
+   either side, so Back and Next are always the same width -- previously
+   .wizard-back-bar set flex: 0 1 auto (shrink-to-content) while Next kept
+   the base flex: 1 (grows to fill), so Next ended up wider than Back
+   whenever their titles differed in length. */
 .wizard-next-bar {
   justify-content: space-between;
 }
@@ -1741,9 +1745,11 @@ section.form-section h3 {
   font-weight: 600;
   font-size: 1rem;
   color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Wraps instead of truncating with an ellipsis -- a long section name
+     ("Extra Curricular Activities") now fits fully inside the fixed-size
+     block across 2 lines rather than being cut off. */
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .wizard-nav-arrow {

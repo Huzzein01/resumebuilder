@@ -1,5 +1,6 @@
 export * from "./types.js";
 export * from "./skillTaxonomy.js";
+export * from "./educationTaxonomy.js";
 export * from "./skillMatcher.js";
 export * from "./relevanceEngine.js";
 export * from "./resumeScanner.js";
