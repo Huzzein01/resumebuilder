@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import GlobalNav from "../components/GlobalNav.js";
 import AiModeToggle from "../components/AiModeToggle.js";
+import ThemeToggle from "../components/ThemeToggle.js";
 import { useSetSidebar } from "../shell/ShellContext.js";
 
 const STORAGE_KEY = "resumebuilder.notificationSettings";
@@ -56,6 +57,12 @@ export default function SettingsPage() {
           <span>Updates about new features</span>
           <input type="checkbox" checked={settings.newFeatures} onChange={() => toggle("newFeatures")} />
         </label>
+      </section>
+
+      <section className="form-section">
+        <h2>Appearance</h2>
+        <p className="status">Switch between light and dark theme. Defaults to your system/browser preference.</p>
+        <ThemeToggle />
       </section>
 
       <section className="form-section">

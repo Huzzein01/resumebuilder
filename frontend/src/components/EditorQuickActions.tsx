@@ -7,26 +7,30 @@ interface EditorQuickActionsProps {
   onSelectTemplate: (id: ResumeTemplateId) => void;
   /** Live-swaps the preview to a hovered-but-not-yet-selected template; pass null to revert to the actually selected one. */
   onHoverTemplate: (id: ResumeTemplateId | null) => void;
-  /** Toggles the fullscreen resume preview overlay -- omit to hide the Preview button (e.g. on pages with no resume to preview yet). */
-  onPreview?: () => void;
+  /** "Preview" toggles the side preview panel's visibility (was the rail's separate collapse/show button -- consolidated here so there's one control, not two doing overlapping things). */
+  previewCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  /** Opens the fullscreen preview overlay -- the true "view full size" action, distinct from show/hide. Rendered as the last, icon-only item in the row. */
+  onFullscreen: () => void;
   /** Scrolls to / triggers the AI Resume Review section on the current page -- omit to hide the AI Review button. */
   onAiReview?: () => void;
 }
 
 /**
- * Template picker (dropdown, replacing the old standalone row of template
- * buttons stacked above the preview) / Preview / AI Review / LinkedIn
- * Optimizer / Question Generator -- sits in the shared top row above the
- * editor/preview columns, right-aligned over the preview column (matching
- * Main.pdf's reference layout), rather than inside the formatting toolbar
- * or as its own block in the preview column. See EditorToolbar for the
- * formatting controls that share this row on the editor-column side.
+ * Template picker (dropdown) / Preview (show-hide the side panel) / AI
+ * Review / LinkedIn Optimizer / Question Generator / Fullscreen -- sits in
+ * the shared sub-header row, right-aligned opposite the formatting toolbar
+ * (matching Main.pdf's reference layout). Fullscreen is last, mirroring the
+ * reference's icon rail collapsing into the header instead of living beside
+ * the preview column.
  */
 export default function EditorQuickActions({
   templateId,
   onSelectTemplate,
   onHoverTemplate,
-  onPreview,
+  previewCollapsed,
+  onToggleCollapsed,
+  onFullscreen,
   onAiReview,
 }: EditorQuickActionsProps) {
   const { navigate } = useNav();
@@ -67,11 +71,15 @@ export default function EditorQuickActions({
           </div>
         )}
       </div>
-      {onPreview && (
-        <button type="button" className="editor-toolbar-tool editor-toolbar-tool-primary" onClick={onPreview}>
-          👁️ Preview
-        </button>
-      )}
+      <button
+        type="button"
+        className={`editor-toolbar-tool${previewCollapsed ? "" : " editor-toolbar-tool-primary"}`}
+        onClick={onToggleCollapsed}
+        aria-pressed={!previewCollapsed}
+        title={previewCollapsed ? "Show the preview panel" : "Hide the preview panel"}
+      >
+        👁️ Preview
+      </button>
       {onAiReview && (
         <button type="button" className="editor-toolbar-tool" onClick={onAiReview}>
           ✨ AI Review
@@ -90,6 +98,15 @@ export default function EditorQuickActions({
         onClick={() => navigate({ page: "career-tool", kind: "interview-questions" })}
       >
         ❓ Question Generator
+      </button>
+      <button
+        type="button"
+        className="editor-toolbar-tool editor-toolbar-tool-icon"
+        onClick={onFullscreen}
+        aria-label="Open fullscreen preview"
+        title="Fullscreen preview"
+      >
+        ⛶
       </button>
     </div>
   );

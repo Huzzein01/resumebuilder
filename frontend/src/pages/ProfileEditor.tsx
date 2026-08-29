@@ -32,7 +32,6 @@ import SectionNav from "../components/SectionNav.js";
 import EditorToolbar from "../components/EditorToolbar.js";
 import EditorQuickActions from "../components/EditorQuickActions.js";
 import EditableTitle from "../components/EditableTitle.js";
-import EditorPreviewRail from "../components/EditorPreviewRail.js";
 import { useSetSidebar, useSetTopBarExtra, useSetSubHeader } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
@@ -121,6 +120,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewColumnRef = useRef<HTMLElement>(null);
   const [previewFrameHeight, setPreviewFrameHeight] = useState(520);
+  const [previewZoom, setPreviewZoom] = useState(0.395);
   const { enabled: aiModeEnabled } = useAiMode();
   const { navigate } = useNav();
 
@@ -143,6 +143,25 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
     updateHeight();
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
+  }, [!!profile]);
+
+  // The preview column's width is now a percentage (55% of the editor+
+  // preview row), not a fixed pixel value -- so a single hardcoded zoom
+  // factor can no longer make the scaled resume page fill it edge to edge
+  // at every viewport width. ResizeObserver keeps zoom = actual column
+  // width / 760 (the unscaled render width) in sync with the real,
+  // continuously-changing column width -- including when the column
+  // animates from 0 back to its full width on "Show preview", since a
+  // resize triggers the observer same as a window resize would.
+  useEffect(() => {
+    const el = previewColumnRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (width && width > 0) setPreviewZoom(width / 760);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [!!profile]);
 
   useEffect(() => {
@@ -352,12 +371,14 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
           templateId={templateId}
           onSelectTemplate={setTemplateId}
           onHoverTemplate={setHoveredTemplateId}
-          onPreview={() => setPreviewOpen(true)}
+          previewCollapsed={previewCollapsed}
+          onToggleCollapsed={() => setPreviewCollapsed((c) => !c)}
+          onFullscreen={() => setPreviewOpen(true)}
           onAiReview={() => aiReviewRef.current()}
         />
       </>
     ),
-    [templateId]
+    [templateId, previewCollapsed]
   );
   useSetSubHeader(subHeaderNode);
 
@@ -792,17 +813,12 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
       <aside className={`editor-preview-column${previewCollapsed ? " collapsed" : ""}`} ref={previewColumnRef}>
         <div className="editor-preview-frame" style={{ height: previewFrameHeight }}>
           <div className="editor-preview-scale-outer">
-            <div className="editor-preview-scale-inner">
+            <div className="editor-preview-scale-inner" style={{ zoom: previewZoom }}>
               <PreviewTemplate resume={buildFullResume(currentProfile)} />
             </div>
           </div>
         </div>
       </aside>
-      <EditorPreviewRail
-        onFullscreen={() => setPreviewOpen(true)}
-        collapsed={previewCollapsed}
-        onToggleCollapse={() => setPreviewCollapsed((c) => !c)}
-      />
       </div>
 
       {previewOpen && (
