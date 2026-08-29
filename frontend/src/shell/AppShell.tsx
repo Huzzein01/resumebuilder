@@ -22,7 +22,7 @@ interface AppShellProps {
  * structure of the app's reference design.
  */
 export default function AppShell({ onHome, showClose, saveStatus, children }: AppShellProps) {
-  const { sidebar, topBarExtra } = useShellSlots();
+  const { sidebar, topBarExtra, subHeader } = useShellSlots();
 
   return (
     <div className="shell">
@@ -42,6 +42,7 @@ export default function AppShell({ onHome, showClose, saveStatus, children }: Ap
           )}
         </div>
       </header>
+      {subHeader && <div className="shell-subheader">{subHeader}</div>}
       <div className="shell-body">
         <aside className="shell-sidebar">{sidebar}</aside>
         <main className="shell-main">{children}</main>

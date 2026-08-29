@@ -3,11 +3,13 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 interface ShellSlots {
   sidebar: ReactNode;
   topBarExtra: ReactNode;
+  subHeader: ReactNode;
 }
 
 interface ShellContextValue extends ShellSlots {
   setSidebar: (node: ReactNode) => void;
   setTopBarExtra: (node: ReactNode) => void;
+  setSubHeader: (node: ReactNode) => void;
 }
 
 const ShellContext = createContext<ShellContextValue | null>(null);
@@ -15,6 +17,7 @@ const ShellContext = createContext<ShellContextValue | null>(null);
 export function ShellProvider({ children }: { children: ReactNode }) {
   const [sidebar, setSidebar] = useState<ReactNode>(null);
   const [topBarExtra, setTopBarExtra] = useState<ReactNode>(null);
+  const [subHeader, setSubHeader] = useState<ReactNode>(null);
 
   // Without this memo, `value` is a fresh object literal every ShellProvider
   // render, which forces every context consumer (AppShell, and via it every
@@ -22,8 +25,8 @@ export function ShellProvider({ children }: { children: ReactNode }) {
   // sidebar/topBarExtra didn't actually change -- amplifying, and possibly by
   // itself sufficient to cause, an infinite render loop with those hooks.
   const value = useMemo(
-    () => ({ sidebar, topBarExtra, setSidebar, setTopBarExtra }),
-    [sidebar, topBarExtra]
+    () => ({ sidebar, topBarExtra, subHeader, setSidebar, setTopBarExtra, setSubHeader }),
+    [sidebar, topBarExtra, subHeader]
   );
 
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;
@@ -36,8 +39,8 @@ function useShellContext(): ShellContextValue {
 }
 
 export function useShellSlots(): ShellSlots {
-  const { sidebar, topBarExtra } = useShellContext();
-  return { sidebar, topBarExtra };
+  const { sidebar, topBarExtra, subHeader } = useShellContext();
+  return { sidebar, topBarExtra, subHeader };
 }
 
 /**
@@ -63,4 +66,21 @@ export function useSetTopBarExtra(node: ReactNode): void {
     setTopBarExtra(node);
     return () => setTopBarExtra(null);
   }, [node, setTopBarExtra]);
+}
+
+/**
+ * Pages call this to register a full-width band rendered directly under the
+ * top bar and above the sidebar/content row -- e.g. the editor's formatting
+ * + tools nav. Spanning the whole shell (rather than living inside the
+ * page's own max-width container) is the point: it lets the two toolbar
+ * groups sit hard against the left and right edges of the window instead of
+ * being squeezed together in the middle of a narrow content column.
+ * Same memoization requirement as useSetSidebar.
+ */
+export function useSetSubHeader(node: ReactNode): void {
+  const { setSubHeader } = useShellContext();
+  useEffect(() => {
+    setSubHeader(node);
+    return () => setSubHeader(null);
+  }, [node, setSubHeader]);
 }

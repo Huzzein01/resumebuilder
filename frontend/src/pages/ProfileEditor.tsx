@@ -33,7 +33,7 @@ import EditorToolbar from "../components/EditorToolbar.js";
 import EditorQuickActions from "../components/EditorQuickActions.js";
 import EditableTitle from "../components/EditableTitle.js";
 import EditorPreviewRail from "../components/EditorPreviewRail.js";
-import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
+import { useSetSidebar, useSetTopBarExtra, useSetSubHeader } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
 type ImportStatus = "idle" | "importing" | "imported" | "error";
@@ -329,6 +329,37 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
     [status, profile, handleSave, downloadMenuOpen, templateId, navigate]
   );
   useSetTopBarExtra(topBarExtraNode);
+
+  // The AI Review click needs the *current* aiModeEnabled/handleGetAiFeedback,
+  // but neither is referentially stable across renders -- putting them in the
+  // subHeaderNode memo's deps would rebuild the node every render, and since
+  // useSetSubHeader stores it in shell state that re-renders this page, that
+  // is exactly the infinite-loop shape. A latest-ref updated in an effect
+  // keeps the handler fresh while leaving the memo's deps stable.
+  const aiReviewRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    aiReviewRef.current = () => {
+      setActiveSectionId("resume-health");
+      if (aiModeEnabled) handleGetAiFeedback();
+    };
+  });
+
+  const subHeaderNode = useMemo(
+    () => (
+      <>
+        <EditorToolbar />
+        <EditorQuickActions
+          templateId={templateId}
+          onSelectTemplate={setTemplateId}
+          onHoverTemplate={setHoveredTemplateId}
+          onPreview={() => setPreviewOpen(true)}
+          onAiReview={() => aiReviewRef.current()}
+        />
+      </>
+    ),
+    [templateId]
+  );
+  useSetSubHeader(subHeaderNode);
 
   if (status === "loading") return <div className="app">Loading profile…</div>;
   if (!profile) return <div className="app">Failed to load profile.</div>;
@@ -698,25 +729,12 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   }
 
   return (
-    <div className="app">
+    <div className="app app-editor">
       <EditableTitle
         value={currentProfile.title || "Master Profile"}
         onChange={(title) => setProfile({ ...currentProfile, title })}
       />
 
-      <div className="editor-toolbar-row">
-        <EditorToolbar />
-        <EditorQuickActions
-          templateId={templateId}
-          onSelectTemplate={setTemplateId}
-          onHoverTemplate={setHoveredTemplateId}
-          onPreview={() => setPreviewOpen(true)}
-          onAiReview={() => {
-            setActiveSectionId("resume-health");
-            if (aiModeEnabled) handleGetAiFeedback();
-          }}
-        />
-      </div>
 
       <div className="editor-with-preview">
       <div className="editor-form-column">

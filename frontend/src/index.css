@@ -22,6 +22,14 @@ body.print-mode {
   padding: 8px 16px 64px;
 }
 
+/* The two-column editor needs more room than a single reading column: at
+   860px the form and preview were both squeezed with wide empty gutters on
+   a normal desktop window. Caps well short of full-bleed so line lengths in
+   the form stay readable on very wide screens. */
+.app-editor {
+  max-width: 1400px;
+}
+
 h1,
 h2,
 h3 {
@@ -35,7 +43,28 @@ h3 {
 .shell {
   display: flex;
   flex-direction: column;
+  /* dvh tracks the *visible* viewport as mobile browser chrome shows/hides;
+     plain vh is the largest-possible height there, which pushes the bottom of
+     the app off-screen and makes the fixed header/sub-header appear to drift
+     while scrolling. vh first as the fallback for browsers without dvh. */
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* Full-width nav band under the top bar: formatting group hard against the
+   left edge, tools group hard against the right (space-between), instead of
+   both being squeezed into the middle of the page's narrow content column. */
+.shell-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: none;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  overflow-x: auto;
 }
 
 .shell-topbar {
@@ -205,21 +234,66 @@ h3 {
     flex-direction: column;
   }
 
+  /* On mobile only the main content scrolls -- the top bar, the sub-header
+     nav, and this section rail all stay put, so the chrome reads as fixed
+     while the form scrolls under it. flex: none stops the rail from being
+     squeezed to nothing once .shell-body stacks vertically. */
   .shell-sidebar {
     width: auto;
+    flex: none;
     border-right: none;
     border-bottom: 1px solid var(--line);
     overflow-x: auto;
     overflow-y: visible;
-    padding: 10px;
+    padding: 8px 10px;
+    /* Lays the Insights and Profile groups out side by side, so the rail is
+       one scrollable row rather than one stacked row per group. */
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
+  .shell-sidebar > div {
+    flex: none;
+  }
+
+  .shell-subheader {
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  /* One compact horizontally-scrolling strip, not a wrapping grid: wrapped
+     it grew to ~75% of a phone screen and left almost no room for the form
+     it's meant to navigate. nowrap + non-shrinking items keeps it to a
+     single row that scrolls sideways instead. */
   .shell-sidebar .section-nav {
     flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .shell-sidebar .section-nav-item {
+    flex: none;
+    white-space: nowrap;
   }
 
   .shell-sidebar .section-nav-label-group {
     display: none;
+  }
+
+  /* Both are redundant on a phone: the search box duplicates the strip
+     that's already one swipe wide, and the score is a full section
+     (Resume Health) one tap away. Reclaims the vertical space for the form. */
+  .shell-sidebar .section-search,
+  .shell-sidebar .sidebar-score-widget {
+    display: none;
+  }
+
+  /* Let the header's action buttons scroll rather than being clipped at the
+     window edge with no way to reach them. */
+  .shell-topbar {
+    gap: 12px;
+    padding: 8px 12px;
+    overflow-x: auto;
   }
 }
 
@@ -403,34 +477,27 @@ button.danger:hover {
 
 /* ---------- Editor toolbar / rich text ---------- */
 
-.editor-toolbar-row {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 18px;
-}
-
+/* Both groups live in .shell-subheader, which space-betweens them to the
+   window's left and right edges -- neither needs its own auto margin, and
+   neither may wrap (the band scrolls horizontally instead, so the two
+   groups can never collide into each other the way they did when both sat
+   inside the narrow content column). */
 .editor-toolbar {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex: none;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-control);
-  padding: 6px 8px;
-  box-shadow: var(--shadow);
+  padding: 4px 6px;
 }
 
 .editor-toolbar-tools {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 6px;
-  margin-left: auto;
+  flex: none;
 }
 
 .editor-toolbar-tool {
