@@ -32,6 +32,7 @@ import SectionNav from "../components/SectionNav.js";
 import EditorToolbar from "../components/EditorToolbar.js";
 import EditorQuickActions from "../components/EditorQuickActions.js";
 import EditableTitle from "../components/EditableTitle.js";
+import EditorPreviewRail from "../components/EditorPreviewRail.js";
 import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
@@ -115,6 +116,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const [templateId, setTemplateId] = useState<ResumeTemplateId>(initialTemplateId ?? DEFAULT_RESUME_TEMPLATE_ID);
   const [hoveredTemplateId, setHoveredTemplateId] = useState<ResumeTemplateId | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewCollapsed, setPreviewCollapsed] = useState(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const previewColumnRef = useRef<HTMLElement>(null);
@@ -769,7 +771,7 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         </div>
       </div>
 
-      <aside className="editor-preview-column" ref={previewColumnRef}>
+      <aside className={`editor-preview-column${previewCollapsed ? " collapsed" : ""}`} ref={previewColumnRef}>
         <div className="editor-preview-frame" style={{ height: previewFrameHeight }}>
           <div className="editor-preview-scale-outer">
             <div className="editor-preview-scale-inner">
@@ -778,6 +780,11 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
           </div>
         </div>
       </aside>
+      <EditorPreviewRail
+        onFullscreen={() => setPreviewOpen(true)}
+        collapsed={previewCollapsed}
+        onToggleCollapse={() => setPreviewCollapsed((c) => !c)}
+      />
       </div>
 
       {previewOpen && (

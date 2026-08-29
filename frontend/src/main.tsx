@@ -5,7 +5,12 @@ import PrintView from "./pages/PrintView.js";
 import PrintCoverLetterView from "./pages/PrintCoverLetterView.js";
 import PrintProfileView from "./pages/PrintProfileView.js";
 import ErrorBoundary from "./components/ErrorBoundary.js";
+import { initTheme } from "./theme.js";
 import "./index.css";
+
+// Before the first paint, not inside a component's effect, so there's no
+// flash of the wrong theme on load.
+initTheme();
 
 const coverLetterMatch = window.location.pathname.match(/^\/print\/cover-letter\/([^/]+)$/);
 const profileMatch = window.location.pathname === "/print/profile";

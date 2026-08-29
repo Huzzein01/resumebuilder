@@ -1472,6 +1472,58 @@ section.form-section h3 {
   align-self: flex-start;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: width 0.18s ease, opacity 0.18s ease, margin 0.18s ease;
+}
+
+/* Collapsed via the rail's hide/show toggle -- width/opacity animate to
+   zero rather than unmounting, so the sticky/measured-height state and
+   scroll position aren't lost when it's shown again. Overrides flex-basis
+   explicitly (not just width) -- the base rule's `flex: none` fixes
+   flex-basis at auto, and a flex item with flex-basis:auto + flex-shrink:0
+   doesn't reliably re-derive its hypothetical size from a changed `width`
+   alone; min-width: 0 is also needed since flex items default to
+   min-width: auto (their content's intrinsic width), which would
+   otherwise refuse to shrink past the resume preview's content width. */
+.editor-preview-column.collapsed {
+  flex-basis: 0;
+  width: 0;
+  min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.editor-preview-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  width: 32px;
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+  padding-top: 2px;
+}
+
+.editor-rail-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.95rem;
+  box-shadow: var(--shadow);
+}
+
+.editor-rail-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
 }
 
 /* No card/border of its own -- the background here (not on the zoomed
@@ -1513,6 +1565,15 @@ section.form-section h3 {
   .editor-preview-column {
     width: 100%;
     position: static;
+  }
+  .editor-preview-column.collapsed {
+    display: none;
+  }
+  .editor-preview-rail {
+    flex-direction: row;
+    width: auto;
+    position: static;
+    align-self: center;
   }
 }
 
