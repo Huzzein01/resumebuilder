@@ -5,7 +5,12 @@ import type { LlmCompletionRequest, LlmProvider } from "../types.js";
 // all speak too, so this one provider covers any of them by just pointing
 // LOCAL_LLM_BASE_URL elsewhere.
 const DEFAULT_BASE_URL = "http://localhost:11434/v1";
-const TIMEOUT_MS = 60000; // local inference on modest hardware is routinely slower than a hosted API
+// Measured ~52s for a single resume-health call (7B model, CPU inference,
+// ~140 total tokens) on ordinary consumer hardware -- 60s was cutting that
+// too close in practice (timed out on a live request). 120s gives real
+// headroom for a slower machine or a longer prompt without the request
+// hanging indefinitely if the server is genuinely down.
+const TIMEOUT_MS = 120000;
 
 /**
  * Self-hosted/open-weight model as a last-resort backup -- no API key, no
