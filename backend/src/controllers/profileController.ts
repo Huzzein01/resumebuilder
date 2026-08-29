@@ -95,6 +95,7 @@ export async function getResumeHealthAi(req: Request, res: Response): Promise<vo
 
 export async function updateProfile(req: Request, res: Response): Promise<void> {
   const {
+    title,
     contact,
     summary,
     workExperience,
@@ -122,6 +123,7 @@ export async function updateProfile(req: Request, res: Response): Promise<void> 
   const doc = await ProfileModel.findOneAndUpdate(
     { slug: DEFAULT_SLUG },
     {
+      title: title?.trim() || "Master Profile",
       contact,
       summary,
       workExperience,

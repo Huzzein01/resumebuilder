@@ -330,6 +330,40 @@ button.danger:hover {
   margin: 14px 0 18px;
 }
 
+.editable-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: text;
+}
+
+.editable-title-pencil {
+  border: none;
+  background: transparent;
+  padding: 2px;
+  font-size: 0.85rem;
+  opacity: 0.55;
+  color: var(--muted);
+}
+
+.editable-title-pencil:hover {
+  opacity: 1;
+  border-color: transparent;
+}
+
+.editable-title-input {
+  font-size: 1.5rem;
+  font-family: inherit;
+  font-weight: inherit;
+  margin: 14px 0 18px;
+  padding: 2px 6px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  min-width: 280px;
+}
+
 /* ---------- Editor toolbar / rich text ---------- */
 
 .editor-toolbar-row {
@@ -419,6 +453,32 @@ button.danger:hover {
 
 .topbar-download-options a:hover {
   background: var(--hover, rgba(0, 0, 0, 0.04));
+}
+
+.topbar-template-options {
+  min-width: 170px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.topbar-template-option {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: left;
+}
+
+.topbar-template-option:hover {
+  background: var(--hover, rgba(0, 0, 0, 0.04));
+  border-color: transparent;
+}
+
+.topbar-template-option.active {
+  color: var(--primary);
 }
 
 .editor-toolbar button {
@@ -1377,18 +1437,21 @@ section.form-section h3 {
   flex-direction: column;
 }
 
-/* No card/border/background of its own -- the resume template's own white
-   page (.resume-doc, which carries its own background/padding) IS the
-   visible block, filling this frame edge to edge, rather than being a
-   thumbnail sitting inside a separate grey card. */
+/* No card/border of its own -- the background here (not on the zoomed
+   .resume-doc inside) is what makes a short/empty resume still read as a
+   full page filling the block, rather than a smaller page floating above a
+   bare gap underneath. Putting the fill on this element instead of inside
+   the zoomed content deliberately avoids percentage-height-of-a-zoomed-
+   ancestor math (unreliable across browsers, and triggers a spurious
+   scrollbar from overflow being measured in pre-zoom coordinates). */
 .editor-preview-frame {
-  flex: 1;
   min-height: 520px;
   max-height: calc(100vh - 140px);
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-card);
   box-shadow: var(--shadow);
+  background: #ffffff;
 }
 
 .editor-preview-scale-outer {

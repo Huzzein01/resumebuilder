@@ -31,6 +31,7 @@ import ScoreGauge from "../components/ScoreGauge.js";
 import SectionNav from "../components/SectionNav.js";
 import EditorToolbar from "../components/EditorToolbar.js";
 import EditorQuickActions from "../components/EditorQuickActions.js";
+import EditableTitle from "../components/EditableTitle.js";
 import { useSetSidebar, useSetTopBarExtra } from "../shell/ShellContext.js";
 
 type Status = "loading" | "ready" | "saving" | "saved" | "error";
@@ -673,11 +674,17 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
 
   return (
     <div className="app">
-      <h1 className="page-title">Master Profile</h1>
+      <EditableTitle
+        value={currentProfile.title || "Master Profile"}
+        onChange={(title) => setProfile({ ...currentProfile, title })}
+      />
 
       <div className="editor-toolbar-row">
         <EditorToolbar />
         <EditorQuickActions
+          templateId={templateId}
+          onSelectTemplate={setTemplateId}
+          onHoverTemplate={setHoveredTemplateId}
           onPreview={() => setPreviewOpen(true)}
           onAiReview={() => {
             setActiveSectionId("resume-health");
@@ -740,21 +747,6 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
       </div>
 
       <aside className="editor-preview-column">
-        <div className="template-picker">
-          {RESUME_TEMPLATES.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={templateId === t.id ? "template-option active" : "template-option"}
-              onClick={() => setTemplateId(t.id)}
-              onMouseEnter={() => setHoveredTemplateId(t.id)}
-              onMouseLeave={() => setHoveredTemplateId(null)}
-              title={t.description}
-            >
-              {t.name}
-            </button>
-          ))}
-        </div>
         <div className="editor-preview-frame">
           <div className="editor-preview-scale-outer">
             <div className="editor-preview-scale-inner">

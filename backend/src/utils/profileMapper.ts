@@ -4,6 +4,9 @@ export function toProfile(doc: any): Profile {
   const obj = doc.toObject();
   return {
     id: obj._id.toString(),
+    // ?? "Master Profile" for the same reason as the arrays below: docs
+    // saved before this field existed won't have it at all.
+    title: obj.title ?? "Master Profile",
     contact: obj.contact,
     summary: obj.summary ?? "",
     workExperience: obj.workExperience,

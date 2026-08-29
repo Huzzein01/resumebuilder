@@ -99,6 +99,8 @@ export interface ReferenceEntry {
 
 export interface Profile {
   id: string;
+  /** Editable document title shown in the Resume Builder's header (distinct from contact.name, the person's own name) -- e.g. "Senior Product Designer -- Resume". Optional so every existing profile-producing/merging call site (deterministic + LLM resume import, test fixtures, JD-scored snapshots) doesn't need to supply one; defaults to "Master Profile" wherever it's actually displayed or persisted. */
+  title?: string;
   contact: ContactInfo;
   summary: string;
   workExperience: WorkExperience[];
