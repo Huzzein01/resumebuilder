@@ -117,8 +117,31 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
   const [previewOpen, setPreviewOpen] = useState(false);
   const [downloadMenuOpen, setDownloadMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewColumnRef = useRef<HTMLElement>(null);
+  const [previewFrameHeight, setPreviewFrameHeight] = useState(520);
   const { enabled: aiModeEnabled } = useAiMode();
   const { navigate } = useNav();
+
+  // Measured (not a hardcoded "100vh - Npx" guess) so the preview card's
+  // height is exactly however much vertical room is actually left below it
+  // -- filling that space fully -- regardless of how tall the title/
+  // toolbar row above it happens to be. Only depends on what's above
+  // .editor-with-preview, not on which section is active, so a measurement
+  // on mount/resize is enough; no need to re-measure per keystroke. Keyed
+  // on `!!profile` (not just []) because the aside this measures doesn't
+  // exist yet on the very first render -- the component still returns its
+  // "Loading profile..." placeholder at that point, so the ref is null
+  // until profile actually loads and this effect re-runs.
+  useEffect(() => {
+    function updateHeight() {
+      const top = previewColumnRef.current?.getBoundingClientRect().top;
+      if (top === undefined) return;
+      setPreviewFrameHeight(Math.max(360, Math.round(window.innerHeight - top - 20)));
+    }
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, [!!profile]);
 
   useEffect(() => {
     fetchProfile()
@@ -746,8 +769,8 @@ export default function ProfileEditor({ initialTemplateId }: ProfileEditorProps)
         </div>
       </div>
 
-      <aside className="editor-preview-column">
-        <div className="editor-preview-frame">
+      <aside className="editor-preview-column" ref={previewColumnRef}>
+        <div className="editor-preview-frame" style={{ height: previewFrameHeight }}>
           <div className="editor-preview-scale-outer">
             <div className="editor-preview-scale-inner">
               <PreviewTemplate resume={buildFullResume(currentProfile)} />

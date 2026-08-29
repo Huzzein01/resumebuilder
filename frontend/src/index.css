@@ -1415,7 +1415,7 @@ section.form-section h3 {
 .editor-with-preview {
   display: flex;
   align-items: stretch;
-  gap: 24px;
+  gap: 40px;
 }
 
 .editor-form-column {
@@ -1428,7 +1428,7 @@ section.form-section h3 {
    the row than the form column (roughly a third, not near-half), and tall
    enough to read as a real card rather than a shrunk-to-fit stub. */
 .editor-preview-column {
-  width: 340px;
+  width: 300px;
   flex: none;
   position: sticky;
   top: 20px;
@@ -1445,8 +1445,10 @@ section.form-section h3 {
    ancestor math (unreliable across browsers, and triggers a spurious
    scrollbar from overflow being measured in pre-zoom coordinates). */
 .editor-preview-frame {
-  min-height: 520px;
-  max-height: calc(100vh - 140px);
+  /* Actual height is set inline (ProfileEditor measures the column's real
+     top offset and fills exactly to the bottom of the viewport) -- this is
+     just the pre-measurement fallback for the first paint. */
+  height: 520px;
   overflow-y: auto;
   overflow-x: hidden;
   border-radius: var(--radius-card);
@@ -1464,10 +1466,10 @@ section.form-section h3 {
      no manual height math needed, and no leftover blank space. Scaled to
      the exact column width so the resume page fills it edge to edge. */
   width: 760px;
-  zoom: 0.447;
+  zoom: 0.395;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
   .editor-with-preview {
     flex-direction: column;
   }
