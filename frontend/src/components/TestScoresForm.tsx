@@ -40,7 +40,7 @@ export default function TestScoresForm({ entries, onChange }: Props) {
           </div>
           <div className="field">
             <label>Date</label>
-            <input value={entry.date ?? ""} onChange={(e) => update(i, { date: e.target.value })} />
+            <input type="date" value={entry.date ?? ""} onChange={(e) => update(i, { date: e.target.value })} />
           </div>
           <button className="entry-remove-btn" onClick={() => remove(i)} aria-label="Remove test score" title="Remove">
             ✕

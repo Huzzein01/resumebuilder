@@ -90,11 +90,19 @@ export default function SimpleEntryForm({
               <>
                 <div className="field">
                   <label>Start Date</label>
-                  <input value={entry.startDate ?? ""} onChange={(e) => update(i, { startDate: e.target.value })} />
+                  <input
+                    type="date"
+                    value={entry.startDate ?? ""}
+                    onChange={(e) => update(i, { startDate: e.target.value })}
+                  />
                 </div>
                 <div className="field">
                   <label>End Date</label>
-                  <input value={entry.endDate ?? ""} onChange={(e) => update(i, { endDate: e.target.value })} />
+                  <input
+                    type="date"
+                    value={entry.endDate ?? ""}
+                    onChange={(e) => update(i, { endDate: e.target.value })}
+                  />
                 </div>
               </>
             )}

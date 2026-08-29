@@ -478,11 +478,19 @@ button.danger:hover {
   margin: 14px 0 18px;
 }
 
-.editable-title {
-  display: inline-flex;
+/* The Resume Builder's document title (EditableTitle) is the one "title
+   bar" this rule targets -- combined-class selector so every other page's
+   plain .page-title (Trash, Settings, Templates, ...) keeps the default
+   left-aligned, full-size heading. 40% smaller than the shared 1.5rem, and
+   centered in its block rather than left-aligned. */
+.page-title.editable-title {
+  display: flex;
+  width: 100%;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   cursor: text;
+  font-size: 0.9rem;
 }
 
 .editable-title-pencil {
@@ -500,16 +508,19 @@ button.danger:hover {
 }
 
 .editable-title-input {
-  font-size: 1.5rem;
+  /* 40% smaller than the original 1.5rem, matching .page-title */
+  font-size: 0.9rem;
   font-family: inherit;
   font-weight: inherit;
-  margin: 14px 0 18px;
+  display: block;
+  margin: 14px auto 18px;
   padding: 2px 6px;
   border: 1px solid var(--primary);
   border-radius: var(--radius-control);
   background: var(--surface);
   color: var(--ink);
   min-width: 280px;
+  text-align: center;
 }
 
 /* ---------- Editor toolbar / rich text ---------- */

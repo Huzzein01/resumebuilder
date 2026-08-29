@@ -75,6 +75,7 @@ export default function ProjectsForm({ entries, onChange }: Props) {
             <div className="field">
               <label>Start Date</label>
               <input
+                type="date"
                 value={entry.startDate ?? ""}
                 onChange={(e) => update(i, { startDate: e.target.value })}
               />
@@ -82,6 +83,7 @@ export default function ProjectsForm({ entries, onChange }: Props) {
             <div className="field">
               <label>End Date</label>
               <input
+                type="date"
                 value={entry.endDate ?? ""}
                 onChange={(e) => update(i, { endDate: e.target.value })}
               />
