@@ -5,9 +5,40 @@ const WEAK_OPENERS = /^\s*(responsible for|worked on|helped with|duties included
 const FIRST_PERSON = /\b(i|my|me)\b/i;
 const HAS_METRIC = /\d/;
 const MAX_BULLET_LENGTH = 220;
+const MIN_BULLET_LENGTH = 15;
+const MIN_SUMMARY_LENGTH = 30;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function normalize(text: string): string {
   return stripRichText(text).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/**
+ * Presence isn't the same as content -- a lone "a" typed into a field
+ * satisfies `!!value.trim()` just as well as a real entry, which let a
+ * single keystroke swing the score by whole structural-penalty buckets
+ * (e.g. a 1-letter name earning full "has a name" credit). This requires
+ * an actual letter and enough length to plausibly be real: multi-word
+ * text (e.g. "Jo Li", "New York") only needs 2+ characters, but a single
+ * token needs 3+ so "a"/"xx" placeholder taps don't count as a name,
+ * skill, or location -- "Cher" (a real if unusual single-word name)
+ * still clears that bar.
+ */
+function looksLikeRealText(value: string, minLength = 2): boolean {
+  const trimmed = value.trim();
+  if (trimmed.length < minLength) return false;
+  if (!/[A-Za-z]/.test(trimmed)) return false;
+  if (!/\s/.test(trimmed) && trimmed.length < 3) return false;
+  return true;
+}
+
+function isValidEmail(value: string): boolean {
+  return EMAIL_PATTERN.test(value.trim());
+}
+
+/** At least 7 digits -- the shortest a real phone number gets (a local number without an area code); rejects "1" or a handful of stray digits typed in passing. */
+function isValidPhone(value: string): boolean {
+  return value.replace(/\D/g, "").length >= 7;
 }
 
 function scanBullet(bullet: Bullet, targetType: "bullet", context: string): ScanSuggestion[] {
@@ -62,7 +93,23 @@ function scanBullet(bullet: Bullet, targetType: "bullet", context: string): Scan
     });
   }
 
+  if (text.length < MIN_BULLET_LENGTH) {
+    suggestions.push({
+      id: `too-short-${bullet.id}`,
+      severity: "low",
+      category: "bullet-too-short",
+      message: `A bullet in ${context} ("${text}") is too short to describe a real accomplishment — flesh it out.`,
+      targetType,
+      targetId: bullet.id,
+    });
+  }
+
   return suggestions;
+}
+
+/** A bullet only counts as real content once it clears the same length bar used everywhere else -- a lone word or letter shouldn't let an entry pass as "has accomplishments listed". */
+function hasRealBullets(bullets: Bullet[]): boolean {
+  return bullets.some((b) => stripRichText(b.text).trim().length >= MIN_BULLET_LENGTH);
 }
 
 function scanDuplicateBullets(allBullets: { bullet: Bullet; context: string }[]): ScanSuggestion[] {
@@ -90,15 +137,18 @@ function scanDuplicateBullets(allBullets: { bullet: Bullet; context: string }[])
 }
 
 function scanWorkExperience(entry: WorkExperience): ScanSuggestion[] {
-  const context = `"${entry.title}" at ${entry.company}`;
+  const context = `"${entry.title || "Untitled role"}" at ${entry.company || "an unnamed company"}`;
   const suggestions = entry.bullets.flatMap((b) => scanBullet(b, "bullet", context));
 
-  if (entry.bullets.length === 0) {
+  const hasRealTitleOrCompany = looksLikeRealText(entry.title, 2) || looksLikeRealText(entry.company, 2);
+  if (!hasRealTitleOrCompany || !hasRealBullets(entry.bullets)) {
     suggestions.push({
       id: `empty-experience-${entry.id}`,
       severity: "high",
       category: "empty-section",
-      message: `${context} has no bullets — add at least one accomplishment.`,
+      message: !hasRealTitleOrCompany
+        ? "A work experience entry has no real title or company — fill those in."
+        : `${context} has no real accomplishments listed — add at least one bullet.`,
       targetType: "workExperience",
       targetId: entry.id,
     });
@@ -108,15 +158,18 @@ function scanWorkExperience(entry: WorkExperience): ScanSuggestion[] {
 }
 
 function scanProject(project: ProjectEntry): ScanSuggestion[] {
-  const context = `the "${project.name}" project`;
+  const context = `the "${project.name || "unnamed"}" project`;
   const suggestions = project.bullets.flatMap((b) => scanBullet(b, "bullet", context));
 
-  if (project.bullets.length === 0) {
+  const hasRealName = looksLikeRealText(project.name, 2);
+  if (!hasRealName || !hasRealBullets(project.bullets)) {
     suggestions.push({
       id: `empty-project-${project.id}`,
       severity: "high",
       category: "empty-section",
-      message: `${context} has no bullets — add at least one accomplishment.`,
+      message: !hasRealName
+        ? "A project entry has no real name — fill that in."
+        : `${context} has no real accomplishments listed — add at least one bullet.`,
       targetType: "project",
       targetId: project.id,
     });
@@ -129,27 +182,31 @@ function scanContact(profile: Profile): ScanSuggestion[] {
   const suggestions: ScanSuggestion[] = [];
   const { contact } = profile;
 
-  if (!contact.name.trim()) {
+  if (!looksLikeRealText(contact.name, 2)) {
     suggestions.push({
       id: "missing-name",
       severity: "high",
       category: "missing-contact",
-      message: "No name on file — add your name so this reads as an actual resume.",
+      message: contact.name.trim()
+        ? "The name on file doesn't look like a real name — add your actual name."
+        : "No name on file — add your name so this reads as an actual resume.",
       targetType: "contact",
     });
   }
 
-  if (!contact.email.trim()) {
+  if (!isValidEmail(contact.email)) {
     suggestions.push({
       id: "missing-email",
       severity: "high",
       category: "missing-contact",
-      message: "No email address on file — add one so recruiters can reach you.",
+      message: contact.email.trim()
+        ? "The email on file doesn't look valid — double check it (e.g. name@example.com)."
+        : "No email address on file — add one so recruiters can reach you.",
       targetType: "contact",
     });
   }
 
-  if (!contact.phone.trim() && !contact.location.trim()) {
+  if (!isValidPhone(contact.phone) && !looksLikeRealText(contact.location, 2)) {
     suggestions.push({
       id: "missing-phone-location",
       severity: "medium",
@@ -164,13 +221,15 @@ function scanContact(profile: Profile): ScanSuggestion[] {
 
 function scanSummary(profile: Profile): ScanSuggestion[] {
   const text = stripRichText(profile.summary).trim();
-  if (text) return [];
+  if (text.length >= MIN_SUMMARY_LENGTH) return [];
   return [
     {
       id: "missing-summary",
       severity: "medium",
       category: "missing-summary",
-      message: "No summary — a 2-3 sentence overview at the top helps recruiters place you quickly.",
+      message: text
+        ? "The summary is too short to say anything useful — write 2-3 sentences highlighting your strongest, most specific experience."
+        : "No summary — a 2-3 sentence overview at the top helps recruiters place you quickly.",
       targetType: "general",
     },
   ];
@@ -178,8 +237,21 @@ function scanSummary(profile: Profile): ScanSuggestion[] {
 
 function scanSkills(profile: Profile): ScanSuggestion[] {
   const suggestions: ScanSuggestion[] = [];
+  let realSkillCount = 0;
 
   for (const skill of profile.skills) {
+    if (!looksLikeRealText(skill.name, 2)) {
+      suggestions.push({
+        id: `vague-skill-${skill.id}`,
+        severity: "low",
+        category: "vague-skill",
+        message: `"${skill.name || "(blank)"}" doesn't look like a real skill — use the actual skill name (e.g. "React", "SQL").`,
+        targetType: "skill",
+        targetId: skill.id,
+      });
+      continue;
+    }
+    realSkillCount++;
     if (!skill.category.trim()) {
       suggestions.push({
         id: `uncategorized-skill-${skill.id}`,
@@ -192,7 +264,7 @@ function scanSkills(profile: Profile): ScanSuggestion[] {
     }
   }
 
-  if (profile.skills.length === 0) {
+  if (realSkillCount === 0) {
     suggestions.push({
       id: "no-skills",
       severity: "high",

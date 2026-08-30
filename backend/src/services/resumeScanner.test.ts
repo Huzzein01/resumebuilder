@@ -196,7 +196,7 @@ describe("scanResume — score", () => {
     profile.contact.name = "Jane Doe";
     profile.contact.email = "jane@example.com";
     profile.contact.phone = "555-1234";
-    profile.summary = "Backend engineer.";
+    profile.summary = "Backend engineer focused on reliable, well-tested payment infrastructure.";
     profile.skills = [{ id: "s1", name: "React", category: "Frontend", aliases: [] }];
     // 6 bullets with no metric -- 6 * 4 = 24pts of raw quality penalty, but capped at 20.
     profile.workExperience = [
@@ -210,6 +210,56 @@ describe("scanResume — score", () => {
     ];
     const result = scanResume(profile);
     expect(result.score).toBe(80);
+  });
+
+  it("a single keystroke in a field does not earn full credit for that section", () => {
+    const profile = emptyProfile();
+    profile.contact.name = "a";
+    profile.contact.email = "a";
+    profile.contact.phone = "1";
+    profile.contact.location = "x";
+    profile.summary = "a";
+    profile.skills = [{ id: "s1", name: "x", category: "", aliases: [] }];
+    const result = scanResume(profile);
+    expect(result.score).toBe(0);
+    expect(result.suggestions.some((s) => s.id === "missing-name")).toBe(true);
+    expect(result.suggestions.some((s) => s.id === "missing-email")).toBe(true);
+    expect(result.suggestions.some((s) => s.id === "missing-phone-location")).toBe(true);
+    expect(result.suggestions.some((s) => s.id === "missing-summary")).toBe(true);
+    expect(result.suggestions.some((s) => s.id === "no-skills")).toBe(true);
+  });
+
+  it("accepts a real short (mononym) name and a real short location", () => {
+    const profile = emptyProfile();
+    profile.contact.name = "Cher";
+    profile.contact.location = "Miami";
+    const result = scanResume(profile);
+    expect(result.suggestions.some((s) => s.id === "missing-name")).toBe(false);
+    expect(result.suggestions.some((s) => s.id === "missing-phone-location")).toBe(false);
+  });
+
+  it("rejects an email-shaped string missing a real domain, and a phone with too few digits", () => {
+    const profile = emptyProfile();
+    profile.contact.email = "not-an-email";
+    profile.contact.phone = "555";
+    const result = scanResume(profile);
+    expect(result.suggestions.some((s) => s.id === "missing-email")).toBe(true);
+    expect(result.suggestions.some((s) => s.id === "missing-phone-location")).toBe(true);
+  });
+
+  it("does not count a one-word junk bullet or a blank title/company as real work experience", () => {
+    const profile = emptyProfile();
+    profile.contact.name = "Jane Doe";
+    profile.contact.email = "jane@example.com";
+    profile.contact.phone = "555-1234";
+    profile.summary = "Backend engineer focused on reliable, well-tested payment infrastructure.";
+    profile.skills = [{ id: "s1", name: "React", category: "Frontend", aliases: [] }];
+    profile.workExperience = [
+      { id: "w1", title: "x", company: "x", startDate: "2020", bullets: [{ id: "b1", text: "did stuff" }] },
+    ];
+    const result = scanResume(profile);
+    expect(result.suggestions.some((s) => s.category === "empty-section" && s.targetId === "w1")).toBe(true);
+    expect(result.score).toBeLessThan(100);
   });
 
   it("sorts suggestions with high severity first", () => {
