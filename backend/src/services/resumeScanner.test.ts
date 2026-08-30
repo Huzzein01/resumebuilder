@@ -160,9 +160,11 @@ describe("scanResume — structural checks", () => {
 });
 
 describe("scanResume — score", () => {
-  it("scores a fully empty profile with all high-severity structural flags, clamped at 0 or above", () => {
+  it("scores a fully empty profile at 0 -- every required section is missing", () => {
     const result = scanResume(emptyProfile());
-    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.score).toBe(0);
+    expect(result.suggestions.some((s) => s.id === "missing-name")).toBe(true);
+    expect(result.suggestions.some((s) => s.id === "missing-summary")).toBe(true);
     expect(result.suggestions.some((s) => s.id === "no-skills")).toBe(true);
     expect(result.suggestions.some((s) => s.id === "no-work-experience")).toBe(true);
     expect(result.suggestions.some((s) => s.id === "missing-email")).toBe(true);
@@ -170,8 +172,10 @@ describe("scanResume — score", () => {
 
   it("scores a clean, complete profile at 100 with no suggestions", () => {
     const profile = emptyProfile();
+    profile.contact.name = "Jane Doe";
     profile.contact.email = "jane@example.com";
     profile.contact.phone = "555-1234";
+    profile.summary = "Backend engineer focused on reliable, well-tested payment infrastructure.";
     profile.workExperience = [
       {
         id: "w1",
@@ -185,6 +189,27 @@ describe("scanResume — score", () => {
     const result = scanResume(profile);
     expect(result.suggestions).toHaveLength(0);
     expect(result.score).toBe(100);
+  });
+
+  it("weighs a handful of bullet-wording nits far less than a missing section, and caps the total quality penalty", () => {
+    const profile = emptyProfile();
+    profile.contact.name = "Jane Doe";
+    profile.contact.email = "jane@example.com";
+    profile.contact.phone = "555-1234";
+    profile.summary = "Backend engineer.";
+    profile.skills = [{ id: "s1", name: "React", category: "Frontend", aliases: [] }];
+    // 6 bullets with no metric -- 6 * 4 = 24pts of raw quality penalty, but capped at 20.
+    profile.workExperience = [
+      {
+        id: "w1",
+        title: "Engineer",
+        company: "Acme",
+        startDate: "2020",
+        bullets: Array.from({ length: 6 }, (_, i) => ({ id: `b${i}`, text: "Worked on the platform" })),
+      },
+    ];
+    const result = scanResume(profile);
+    expect(result.score).toBe(80);
   });
 
   it("sorts suggestions with high severity first", () => {

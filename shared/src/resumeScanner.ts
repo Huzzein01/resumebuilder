@@ -129,6 +129,16 @@ function scanContact(profile: Profile): ScanSuggestion[] {
   const suggestions: ScanSuggestion[] = [];
   const { contact } = profile;
 
+  if (!contact.name.trim()) {
+    suggestions.push({
+      id: "missing-name",
+      severity: "high",
+      category: "missing-contact",
+      message: "No name on file — add your name so this reads as an actual resume.",
+      targetType: "contact",
+    });
+  }
+
   if (!contact.email.trim()) {
     suggestions.push({
       id: "missing-email",
@@ -150,6 +160,20 @@ function scanContact(profile: Profile): ScanSuggestion[] {
   }
 
   return suggestions;
+}
+
+function scanSummary(profile: Profile): ScanSuggestion[] {
+  const text = stripRichText(profile.summary).trim();
+  if (text) return [];
+  return [
+    {
+      id: "missing-summary",
+      severity: "medium",
+      category: "missing-summary",
+      message: "No summary — a 2-3 sentence overview at the top helps recruiters place you quickly.",
+      targetType: "general",
+    },
+  ];
 }
 
 function scanSkills(profile: Profile): ScanSuggestion[] {
@@ -181,15 +205,43 @@ function scanSkills(profile: Profile): ScanSuggestion[] {
   return suggestions;
 }
 
+// Missing an entire required part of the resume (no name, no email, no
+// skills, no work experience, an empty entry, no summary) is a fundamentally
+// different problem from a wording nitpick on a bullet that otherwise
+// exists -- so the two are scored on separate scales instead of one flat
+// per-suggestion penalty. Structural gaps are weighted heavily enough that
+// a genuinely blank profile (missing every one of these) lands at 0, not
+// the ~72 the old flat 8/4/2 weights produced. Bullet-level wording issues
+// (no-metrics, weak-opener, first-person, too-long, duplicate, uncategorized
+// skill) stay lightweight per instance *and* capped in total, so a resume
+// with real content and a handful of stylistic nits can't be dragged toward
+// 0 the way a missing section can -- ten so-so bullets shouldn't score worse
+// than one truly empty resume.
+const STRUCTURAL_CATEGORIES = new Set(["missing-contact", "missing-summary", "empty-section"]);
+const STRUCTURAL_PENALTY = { high: 20, medium: 10, low: 5 } as const;
+const QUALITY_ISSUE_PENALTY = 4;
+const MAX_QUALITY_PENALTY = 20;
+
 function scoreFromSuggestions(suggestions: ScanSuggestion[]): number {
-  const penalty = { high: 8, medium: 4, low: 2 } as const;
-  const total = suggestions.reduce((sum, s) => sum + penalty[s.severity], 0);
-  return Math.max(0, 100 - total);
+  let structuralPenalty = 0;
+  let qualityPenalty = 0;
+
+  for (const s of suggestions) {
+    if (STRUCTURAL_CATEGORIES.has(s.category)) {
+      structuralPenalty += STRUCTURAL_PENALTY[s.severity];
+    } else {
+      qualityPenalty += QUALITY_ISSUE_PENALTY;
+    }
+  }
+  qualityPenalty = Math.min(qualityPenalty, MAX_QUALITY_PENALTY);
+
+  return Math.max(0, 100 - structuralPenalty - qualityPenalty);
 }
 
 export function scanResume(profile: Profile): ResumeScanResult {
   const suggestions: ScanSuggestion[] = [
     ...scanContact(profile),
+    ...scanSummary(profile),
     ...profile.workExperience.flatMap(scanWorkExperience),
     ...profile.projects.flatMap(scanProject),
     ...scanSkills(profile),
