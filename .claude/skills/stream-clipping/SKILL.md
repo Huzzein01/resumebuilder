@@ -28,7 +28,7 @@ Script: `CLIP="${CLAUDE_SKILL_DIR}/scripts/clip.py"` (if unset, use the absolute
 - Posty plugin: publishes/schedules one clip to TikTok and Instagram Reels, with browser sign-in.
 
 ## Publishing rules
-- **Which route**: run ToolSearch "posty". If Posty tools are found, use them for both TikTok and Instagram. Otherwise use HiggsField `tiktok_*` for TikTok and tell the user Instagram needs Posty enabled (the raw API notes below are for reference only).
+- **Which route**: run ToolSearch "posty". If Posty tools are found, use them for both TikTok and Instagram. Otherwise use HiggsField for TikTok (upload the clip with `media_upload` → PUT → `media_confirm`, since `tiktok_prepare_publish` only takes a HiggsField-hosted URL; the user then submits its review form, and you don't call `tiktok_publish` yourself; videos must be 3-600s at 23-60fps) and tell the user Instagram needs Posty enabled (the raw API notes below are for reference only).
 - **Done means**: the publish tool returned a post ID or URL (or HiggsField `tiktok_publish_status` reports published), and you've reported that link back for each clip and platform.
 - **TikTok**: unaudited API apps can only post privately, and those posts stay private after the audit passes. Do a single private test post first and confirm visibility before batching. Always confirm caption, hashtags, and account with the user before posting.
 - **Instagram Reels**: needs a professional account; two-step flow (create container with `media_type=REELS` + `video_url`, then publish); limit 100 API posts per rolling 24h; H.264 + AAC MP4; keep Reels at or under 90s to be safe.
