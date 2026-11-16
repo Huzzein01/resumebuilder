@@ -33,9 +33,15 @@ def ass_time(t):
 
 
 def transcribe(video, model_name):
+    import numpy as np
     from faster_whisper import WhisperModel
+    # decode with ffmpeg (16 kHz mono float) instead of PyAV, whose API drifts between versions
+    pcm = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", video, "-vn",
+                          "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                         check=True, capture_output=True).stdout
+    audio = np.frombuffer(pcm, np.int16).astype(np.float32) / 32768.0
     model = WhisperModel(model_name, device="auto", compute_type="int8")
-    segments, _ = model.transcribe(video, word_timestamps=True, vad_filter=True)
+    segments, _ = model.transcribe(audio, word_timestamps=True, vad_filter=True)
     words, srt = [], []
     for i, seg in enumerate(segments, 1):
         srt.append(f"{i}\n{srt_time(seg.start)} --> {srt_time(seg.end)}\n{seg.text.strip()}\n")
