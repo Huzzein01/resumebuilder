@@ -14,7 +14,9 @@ Principle: edit real footage, don't generate it. AI compresses and structures; t
 
 ## Pipeline
 1. **Source**: local OBS recording (preferred) or VOD via `yt-dlp <url>`. Nothing clips live; work happens after the stream.
-Script: `CLIP="${CLAUDE_SKILL_DIR}/scripts/clip.py"` (if unset, use the absolute path of this skill folder). Setup once: `pip install yt-dlp faster-whisper`; ffmpeg must have libass. The Whisper model downloads from huggingface.co on first run.
+Script: `CLIP="${CLAUDE_SKILL_DIR}/scripts/clip.py"` (if unset, use the absolute path of this skill folder). Setup once: `pip install yt-dlp faster-whisper`; ffmpeg must have libass. The Whisper model downloads from huggingface.co on first run. Verify the setup with `python3 scripts/check_setup.py --fix` (it installs missing pip packages, then runs a real transcribe + render test).
+
+Workspace convention: if the project has a `CLAUDE.md` from `assets/workspace-CLAUDE.md` (folders `1-raw/`, `2-working/`, `3-finished/`), its folder rules and posting rule override the defaults below. Pass `--outdir` to `transcribe` to keep transcripts out of the raw folder.
 
 2. **Transcribe**: `python3 "$CLIP" transcribe raw.mp4` → `raw.words.json` (word timestamps) + `raw.srt`.
 3. **Find moments**: from transcript + `silencedetect` + scene detection + (Twitch) chat-spike timestamps, pick 5-10 candidates of 15-60s. Each needs a hook in the first 2s, a payoff, and a clean ending. Give each a title, timestamps, and reason. Show the list and get approval before rendering.

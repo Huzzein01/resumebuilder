@@ -2,8 +2,8 @@
 """Stream clipping helper: transcribe, cut, reframe to 9:16, caption, normalize.
 
 Usage:
-  clip.py transcribe <video> [--model base]
-      -> <video-base>.words.json (word timestamps) + <video-base>.srt
+  clip.py transcribe <video> [--model base] [--outdir DIR]
+      -> DIR/<name>.words.json (word timestamps) + DIR/<name>.srt
   clip.py render <video> <start> <end> <out.mp4> [--layout center|stack]
       [--cam x,y,w,h] [--words FILE] [--no-captions]
 
@@ -32,7 +32,7 @@ def ass_time(t):
     return f"{h}:{m:02}:{s:02}.{cs:02}"
 
 
-def transcribe(video, model_name):
+def transcribe(video, model_name, outdir=None):
     import numpy as np
     from faster_whisper import WhisperModel
     # decode with ffmpeg (16 kHz mono float) instead of PyAV, whose API drifts between versions
@@ -48,7 +48,8 @@ def transcribe(video, model_name):
         for w in seg.words or []:
             words.append({"start": round(w.start, 3), "end": round(w.end, 3), "word": w.word.strip()})
         print(f"[{seg.start:8.1f}] {seg.text.strip()}")
-    base = os.path.splitext(video)[0]
+    base = os.path.join(outdir or os.path.dirname(video) or ".", os.path.splitext(os.path.basename(video))[0])
+    os.makedirs(os.path.dirname(base), exist_ok=True)
     with open(base + ".words.json", "w") as f:
         json.dump(words, f)
     with open(base + ".srt", "w") as f:
@@ -104,7 +105,8 @@ def render(a):
             ass = os.path.join(tempfile.mkdtemp(), "caps.ass")
             with open(words_path) as f:
                 if build_ass(json.load(f), start, end, ass):
-                    vf = vf[:-3] + "[pre];[pre]ass=" + ass + "[v]"
+                    safe = ass.replace("\\", "/").replace(":", "\\:")  # Windows C:\ paths break filtergraph syntax
+                    vf = vf[:-3] + "[pre];[pre]ass='" + safe + "'[v]"
         else:
             print(f"note: {words_path} not found; rendering without captions (run transcribe first)")
 
@@ -124,6 +126,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="cmd", required=True)
     t = sub.add_parser("transcribe"); t.add_argument("video"); t.add_argument("--model", default="base")
+    t.add_argument("--outdir", help="where to write .words.json/.srt (default: next to the video)")
     r = sub.add_parser("render")
     for n in ("video", "start", "end", "out"):
         r.add_argument(n)
@@ -132,7 +135,7 @@ def main():
     r.add_argument("--words"); r.add_argument("--no-captions", action="store_true")
     a = p.parse_args()
     if a.cmd == "transcribe":
-        transcribe(a.video, a.model)
+        transcribe(a.video, a.model, a.outdir)
     elif a.layout == "stack" and not a.cam:
         sys.exit("--cam x,y,w,h is required for --layout stack")
     else:
